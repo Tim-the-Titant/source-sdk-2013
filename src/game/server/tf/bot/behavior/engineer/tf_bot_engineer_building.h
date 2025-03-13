@@ -12,19 +12,19 @@ class CTFBotHintSentrygun;
 class CTFBotEngineerBuilding : public Action< CTFBot >
 {
 public:
-	CTFBotEngineerBuilding( void );
-	CTFBotEngineerBuilding( CTFBotHintSentrygun *sentryBuildHint );
+	CTFBotEngineerBuilding(void);
+	CTFBotEngineerBuilding(CTFBotHintSentrygun* sentryBuildHint);
 
-	virtual ActionResult< CTFBot >	OnStart( CTFBot *me, Action< CTFBot > *priorAction );
-	virtual ActionResult< CTFBot >	Update( CTFBot *me, float interval );
-	virtual void					OnEnd( CTFBot *me, Action< CTFBot > *nextAction );
+	virtual ActionResult< CTFBot >	OnStart(CTFBot* me, Action< CTFBot >* priorAction);
+	virtual ActionResult< CTFBot >	Update(CTFBot* me, float interval);
+	virtual void					OnEnd(CTFBot* me, Action< CTFBot >* nextAction);
 
-	virtual ActionResult< CTFBot >	OnResume( CTFBot *me, Action< CTFBot > *interruptingAction );
+	virtual ActionResult< CTFBot >	OnResume(CTFBot* me, Action< CTFBot >* interruptingAction);
 
-	virtual EventDesiredResult< CTFBot > OnTerritoryLost( CTFBot *me, int territoryID );
-	virtual EventDesiredResult< CTFBot > OnTerritoryCaptured( CTFBot *me, int territoryID );
+	virtual EventDesiredResult< CTFBot > OnTerritoryLost(CTFBot* me, int territoryID);
+	virtual EventDesiredResult< CTFBot > OnTerritoryCaptured(CTFBot* me, int territoryID);
 
-	virtual const char *GetName( void ) const	{ return "EngineerBuilding"; };
+	virtual const char* GetName(void) const { return "EngineerBuilding"; };
 
 private:
 	CountdownTimer m_searchTimer;
@@ -54,10 +54,18 @@ private:
 
 	CountdownTimer m_territoryRangeTimer;
 	bool m_isSentryOutOfPosition;
-	bool CheckIfSentryIsOutOfPosition( CTFBot *me ) const;
+	bool CheckIfSentryIsOutOfPosition(CTFBot* me) const;
 
-	void UpgradeAndMaintainBuildings( CTFBot *me );
-	bool IsMetalSourceNearby( CTFBot *me ) const;
+	CObjectTeleporter* PickClosestValidTeleporter(CTFBot* me) const;
+	CBaseObject* PickCurrentWorkTarget(CTFBot* me) const;
+	Vector PickIdealWorkSpot(CTFBot* me, CBaseObject* workTarget) const;
+	bool IsInPositionToWork(CTFBot* me, CBaseObject* workTarget, bool& shouldBeDucking, const Vector* idealPosition = NULL) const;
+	void NavigateToWorkingSpot(CTFBot* me, const Vector& spot);
+	void MaintainBuilding(CTFBot* me, CBaseObject* workTarget);
+	const Vector& LookAtPointOnWorkTarget(CTFBot* me, CBaseObject* workTarget) const;
+
+	void UpgradeAndMaintainBuildings(CTFBot* me);
+	bool IsMetalSourceNearby(CTFBot* me) const;
 };
 
 

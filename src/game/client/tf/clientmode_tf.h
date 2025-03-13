@@ -25,6 +25,7 @@ class CHudEurekaEffectTeleportMenu;
 class CHudMenuTauntSelection;
 class CHudInspectPanel;
 class CHudUpgradePanel;
+class CHudMenuSpyBuild;
 #if defined( _X360 )
 class CTFClientScoreBoardDialog;
 #endif
@@ -124,6 +125,7 @@ private:
 	CHudMenuSpyDisguise 	*m_pMenuSpyDisguise;
 	CHudMenuTauntSelection	*m_pMenuTauntSelection;
 	CHudUpgradePanel		*m_pMenuUpgradePanel;
+	CHudMenuSpyBuild* m_pMenuSpyBuild;
 	CHudSpellMenu			*m_pMenuSpell;
 	CHudEurekaEffectTeleportMenu *m_pEurekaTeleportMenu;
 	CHudTeamGoalTournament	*m_pTeamGoalTournament;

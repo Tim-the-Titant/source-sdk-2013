@@ -282,32 +282,32 @@ public:
 		}
 
 		// Duck Journal is off, no longer uploading
-		//if ( m_flNextDuckScoresUploadTime < Plat_FloatTime() )
-		//{
-		//	// Hard limit the rate players can update scores
-		//	float flNextUpdateTime = tf_duck_upload_rate.GetFloat();
-		//	if ( DuckUploadPendingScores() )
-		//	{
-		//		// Request new score
-		//		m_flNextUpdateDuckScoreTime = Plat_FloatTime() + 10.0f;
-		//	}
-		//	// 4x as long if you don't have a Duck Journal
-		//	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
-		//	if ( pPlayer )
-		//	{
-		//		static CSchemaAttributeDefHandle pAttr_DuckLevelBadge( "duck badge level" );
-		//		if ( pAttr_DuckLevelBadge )
-		//		{
-		//			CTFWearable *pActionItem = pPlayer->GetEquippedWearableForLoadoutSlot( LOADOUT_POSITION_ACTION );
-		//			// Don't care about the level, just if the attribute is found
-		//			if ( pActionItem && FindAttribute( pActionItem->GetAttributeContainer()->GetItem(), pAttr_DuckLevelBadge ) )
-		//			{
-		//				flNextUpdateTime *= 0.5f;
-		//			}
-		//		}
-		//	}
-		//	m_flNextDuckScoresUploadTime = Plat_FloatTime() + flNextUpdateTime;
-		//}
+		if ( m_flNextDuckScoresUploadTime < Plat_FloatTime() )
+		{
+			// Hard limit the rate players can update scores
+			float flNextUpdateTime = tf_duck_upload_rate.GetFloat();
+			if ( DuckUploadPendingScores() )
+			{
+				// Request new score
+				m_flNextUpdateDuckScoreTime = Plat_FloatTime() + 10.0f;
+			}
+			// 4x as long if you don't have a Duck Journal
+			C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
+			if ( pPlayer )
+			{
+				static CSchemaAttributeDefHandle pAttr_DuckLevelBadge( "duck badge level" );
+				if ( pAttr_DuckLevelBadge )
+				{
+					CTFWearable *pActionItem = pPlayer->GetEquippedWearableForLoadoutSlot( LOADOUT_POSITION_ACTION );
+					// Don't care about the level, just if the attribute is found
+					if ( pActionItem && FindAttribute( pActionItem->GetAttributeContainer()->GetItem(), pAttr_DuckLevelBadge ) )
+					{
+						flNextUpdateTime *= 0.5f;
+					}
+				}
+			}
+			m_flNextDuckScoresUploadTime = Plat_FloatTime() + flNextUpdateTime;
+		}
 	}
 #endif // CLIENT_DLL
 
@@ -397,49 +397,49 @@ public:
 	{
 		return false;
 
-		//CSteamID localID;
+		CSteamID localID;
 
-		//if ( !steamapicontext || !steamapicontext->SteamUser() )
-		//	return false;
+		if ( !steamapicontext || !steamapicontext->SteamUser() )
+			return false;
 
-		//localID = steamapicontext->SteamUser()->GetSteamID();
+		localID = steamapicontext->SteamUser()->GetSteamID();
 
-		//bool bUpdatedScores = false;
-		//for ( int i = 0; i < DUCK_NUM_LEADERBOARDS; ++i )
-		//{
-		//	CLeaderboardInfo *pLeaderboard = GetDuckLeaderboard( g_szDuckLeaderboardNames[i] );
-		//	
-		//	if ( pLeaderboard && pLeaderboard->IsLeaderboardFound() && pLeaderboard->HasPendingUpdate() )
-		//	{
-		//		pLeaderboard->SetHasPendingUpdate( false );
-		//		bUpdatedScores = true;
+		bool bUpdatedScores = false;
+		for ( int i = 0; i < DUCK_NUM_LEADERBOARDS; ++i )
+		{
+			CLeaderboardInfo *pLeaderboard = GetDuckLeaderboard( g_szDuckLeaderboardNames[i] );
+			
+			if ( pLeaderboard && pLeaderboard->IsLeaderboardFound() && pLeaderboard->HasPendingUpdate() )
+			{
+				pLeaderboard->SetHasPendingUpdate( false );
+				bUpdatedScores = true;
 
-		//		int iScoreCheck = RandomInt( INT_MAX / 2, INT_MAX );
-		//		// Tell the GC to update our duck contribution
-		//		GCSDK::CProtoBufMsg<CGCMsgGC_PlayerDuckLeaderboard_IndividualUpdate> msg( k_EMsgGC_DuckLeaderboard_IndividualUpdate );
-		//		msg.Body().set_score( pLeaderboard->GetMyScore() );
-		//		msg.Body().set_type( i );
+				int iScoreCheck = RandomInt( INT_MAX / 2, INT_MAX );
+				// Tell the GC to update our duck contribution
+				GCSDK::CProtoBufMsg<CGCMsgGC_PlayerDuckLeaderboard_IndividualUpdate> msg( k_EMsgGC_DuckLeaderboard_IndividualUpdate );
+				msg.Body().set_score( pLeaderboard->GetMyScore() );
+				msg.Body().set_type( i );
 
-		//		MD5Context_t md5Context;
-		//		MD5Init( &md5Context );
-		//		
-		//		AccountID_t unAccountId = localID.GetAccountID();
-		//		int nScore = pLeaderboard->GetMyScore();
+				MD5Context_t md5Context;
+				MD5Init( &md5Context );
+				
+				AccountID_t unAccountId = localID.GetAccountID();
+				int nScore = pLeaderboard->GetMyScore();
 
-		//		MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&unAccountId ), sizeof( unAccountId ) );
-		//		MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&nScore ), sizeof( nScore ) );
-		//		MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&i ), sizeof( i ) );
-		//		MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&TF_DUCK_ID ), sizeof( TF_DUCK_ID ) );
-		//		MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&iScoreCheck ), sizeof( iScoreCheck ) );
-		//		
-		//		MD5Value_t md5Result;
-		//		MD5Final( &md5Result.bits[0], &md5Context );
-		//		msg.Body().set_score_id( &md5Result.bits[0], MD5_DIGEST_LENGTH );
-		//		msg.Body().set_score_check( iScoreCheck );
-		//		GCClientSystem()->BSendMessage( msg );
-		//	}
-		//}
-		//return bUpdatedScores;
+				MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&unAccountId ), sizeof( unAccountId ) );
+				MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&nScore ), sizeof( nScore ) );
+				MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&i ), sizeof( i ) );
+				MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&TF_DUCK_ID ), sizeof( TF_DUCK_ID ) );
+				MD5Update( &md5Context, static_cast<const uint8 *>( (void *)&iScoreCheck ), sizeof( iScoreCheck ) );
+				
+				MD5Value_t md5Result;
+				MD5Final( &md5Result.bits[0], &md5Context );
+				msg.Body().set_score_id( &md5Result.bits[0], MD5_DIGEST_LENGTH );
+				msg.Body().set_score_check( iScoreCheck );
+				GCClientSystem()->BSendMessage( msg );
+			}
+		}
+		return bUpdatedScores;
 	}
 
 	void DuckUpdateScore( int iIncrement, EDuckLeaderboardTypes kLeaderboard )

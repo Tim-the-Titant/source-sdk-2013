@@ -57,6 +57,13 @@ ConVar  tf_parachute_maxspeed_onfire_z( "tf_parachute_maxspeed_onfire_z", "10.0f
 ConVar  tf_parachute_aircontrol( "tf_parachute_aircontrol", "2.5f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Multiplier for how much air control players have when Parachute is deployed" );
 ConVar	tf_parachute_deploy_toggle_allowed( "tf_parachute_deploy_toggle_allowed", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
+ConVar 	sv_enablebunnyhopping("sv_enablebunnyhopping", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Removes speed cap from bunnyhopping.");
+ConVar  sv_autobunnyhopping("sv_autobunnyhopping", "0", FCVAR_REPLICATED | FCVAR_NOTIFY,
+	"Whether players will automatically bunnyhop whilst holding +JUMP.\n"
+	" 0   - Players will not automatically jump while holding +JUMP.\n"
+	" 1   - Players will automatically jump while holding +JUMP.\n"
+	" 2   - Players will automatically jump while holding +JUMP, and will be able to jump while crouching.\n");
+
 ConVar  tf_halloween_kart_aircontrol( "tf_halloween_kart_aircontrol", "1.2f", FCVAR_CHEAT | FCVAR_REPLICATED, "Multiplier for how much air control players have when in Kart Mode" );
 ConVar	tf_ghost_up_speed( "tf_ghost_up_speed", "300.f", FCVAR_CHEAT | FCVAR_REPLICATED, "Speed that ghost go upward while holding jump key" );
 ConVar	tf_ghost_xy_speed( "tf_ghost_xy_speed", "300.f", FCVAR_CHEAT | FCVAR_REPLICATED );
@@ -82,7 +89,7 @@ extern ConVar cl_backspeed;
 extern ConVar cl_sidespeed;
 extern ConVar mp_tournament_readymode_countdown;
 
-#define TF_MAX_SPEED   (400 * 1.3)	// 400 is Scout max speed, and we allow up to 3% movement bonus.
+ConVar tf_maxspeed_limit("tf_maxspeed_limit", "520.f", FCVAR_CHEAT | FCVAR_REPLICATED);
 
 #define TF_WATERJUMP_FORWARD	30
 #define TF_WATERJUMP_UP			300
@@ -307,8 +314,7 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 	player = m_pTFPlayer;
 	mv = pMove;
 
-	// The max speed is currently set to the scout - if this changes we need to change this!
-	mv->m_flMaxSpeed = TF_MAX_SPEED;
+	mv->m_flMaxSpeed = tf_maxspeed_limit.GetFloat();
 
 	// Handle charging demomens
 	ChargeMove();
@@ -1091,6 +1097,9 @@ void CTFGameMovement::AirDash( void )
 //-----------------------------------------------------------------------------
 void CTFGameMovement::PreventBunnyJumping()
 {
+	if (sv_enablebunnyhopping.GetBool())
+		return;
+
 	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
 		return;
 
@@ -1223,7 +1232,7 @@ bool CTFGameMovement::CheckJumpButton()
 	ToggleParachute();
 
 	// Cannot jump will ducked.
-	if ( player->GetFlags() & FL_DUCKING )
+	if (player->GetFlags() & FL_DUCKING && (sv_autobunnyhopping.GetInt() != 2))
 	{
 		// Let a scout do it.
 		bool bAllow = ( bScout && !bOnGround );
@@ -1237,7 +1246,7 @@ bool CTFGameMovement::CheckJumpButton()
 		return false;
 
 	// Cannot jump again until the jump button has been released.
-	if ( mv->m_nOldButtons & IN_JUMP )
+	if (mv->m_nOldButtons & IN_JUMP && (!sv_autobunnyhopping.GetBool() || !bOnGround))
 		return false;
 
 	// In air, so ignore jumps 
@@ -1382,7 +1391,7 @@ int CTFGameMovement::CheckStuck( void )
 						m_pTFPlayer->GetTeam()->GetName(),
 						m_pTFPlayer->GetAbsOrigin().x, m_pTFPlayer->GetAbsOrigin().y, m_pTFPlayer->GetAbsOrigin().z );
 
-					m_pTFPlayer->TakeDamage( CTakeDamageInfo( m_pTFPlayer, m_pTFPlayer, vec3_origin, m_pTFPlayer->WorldSpaceCenter(), 999999.9f, DMG_CRUSH ) );
+					m_pTFPlayer->CommitSuicide(false, true);
 				}
 				else
 				{
