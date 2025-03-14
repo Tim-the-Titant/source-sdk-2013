@@ -274,6 +274,18 @@ const char *GetRandomBotName( void )
 		"Waterproof",
 		"Fire Proof",
 
+		"John Spartan",
+		"Leeloo Dallas Multipass",
+		"Sho'nuff",
+		"Bruce Leroy",
+		"CAN YOUUUUUUUUU DIG IT?!?!?!?!",
+		"Big Gulp, Huh?",
+		"Stupid Hot Dog",
+		"I'm your huckleberry",
+		"The Crocketeer",
+
+		"Lamarwrong",
+
 		NULL
 	};
 	static int nameCount = 0;

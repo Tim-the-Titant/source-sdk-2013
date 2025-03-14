@@ -10,9 +10,13 @@
 #include "zombie_attack.h"
 #include "zombie_spawn.h"
 
+extern ConVar tf_zombie_use_old_models;
+
 ActionResult< CZombie >	CZombieSpawn::OnStart( CZombie *me, Action< CZombie > *priorAction )
 {
-	me->GetBodyInterface()->StartActivity( ACT_TRANSITION );
+	
+	me->GetBodyInterface()->StartActivity(ACT_TRANSITION);
+	
 
 	return Continue();
 }

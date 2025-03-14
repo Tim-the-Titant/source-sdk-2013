@@ -247,20 +247,49 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 	if ( me->GetFlagToFetch() )
 	{
 		// capture the flag
+		if (me->IsPlayerClass(TF_CLASS_SNIPER))
+		{
+			return new CTFBotSniperLurk;
+		}
+
+		if (me->IsPlayerClass(TF_CLASS_MEDIC))
+		{
+			return new CTFBotMedicHeal;
+		}
+
+		if (me->IsPlayerClass(TF_CLASS_ENGINEER))
+		{
+			return new CTFBotEngineerBuild;
+		}
+
+		if (me->IsPlayerClass(TF_CLASS_SPY))
+		{
+			return new CTFBotSpyInfiltrate;
+		}
+
 		return new CTFBotFetchFlag;
 	}
 	else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_ESCORT )
 	{
-		// push the cart
-		if ( me->GetTeamNumber() == TF_TEAM_BLUE )
+		//TODO: Make both teams push when it's payload race
+
+		if (TFGameRules()->HasMultipleTrains())
 		{
-			// blu is pushing
 			return new CTFBotPayloadPush;
 		}
-		else if ( me->GetTeamNumber() == TF_TEAM_RED )
+		else
 		{
-			// red is blocking
-			return new CTFBotPayloadGuard;
+			// push the cart
+			if (me->GetTeamNumber() == TF_TEAM_BLUE)
+			{
+				// blu is pushing
+				return new CTFBotPayloadPush;
+			}
+			else if (me->GetTeamNumber() == TF_TEAM_RED)
+			{
+				// red is blocking
+				return new CTFBotPayloadGuard;
+			}
 		}
 	}
 	else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_CP )

@@ -22,6 +22,10 @@
 
 ConVar tf_max_active_zombie( "tf_max_active_zombie", "30", FCVAR_CHEAT );
 
+ConVar tf_halloween_skeleton_test_hat("tf_halloween_skeleton_test_hat", "-1", FCVAR_CHEAT);
+
+ConVar tf_zombie_use_old_models("tf_zombie_use_old_models", "0", FCVAR_CHEAT);
+
 
 //-----------------------------------------------------------------------------------------------------
 // NPC Zombie versions of the players
@@ -84,7 +88,7 @@ CZombie::~CZombie()
 
 void CZombie::PrecacheZombie()
 {
-	/*PrecacheModel( "models/player/items/scout/scout_zombie.mdl" );
+	PrecacheModel( "models/player/items/scout/scout_zombie.mdl" );
 	PrecacheModel( "models/player/items/sniper/sniper_zombie.mdl" );
 	PrecacheModel( "models/player/items/soldier/soldier_zombie.mdl" );
 	PrecacheModel( "models/player/items/demo/demo_zombie.mdl" );
@@ -92,7 +96,7 @@ void CZombie::PrecacheZombie()
 	PrecacheModel( "models/player/items/heavy/heavy_zombie.mdl" );
 	PrecacheModel( "models/player/items/pyro/pyro_zombie.mdl" );
 	PrecacheModel( "models/player/items/spy/spy_zombie.mdl" );
-	PrecacheModel( "models/player/items/engineer/engineer_zombie.mdl" );*/
+	PrecacheModel( "models/player/items/engineer/engineer_zombie.mdl" );
 
 	int nSkeletonModel = PrecacheModel( SKELETON_MODEL );
 	PrecacheGibsForModel( nSkeletonModel );
@@ -143,18 +147,22 @@ void CZombie::Spawn( void )
 {
 	Precache();
 
-	/*int which = RandomInt( TF_CLASS_SCOUT, TF_CLASS_ENGINEER );
+	int which = RandomInt( TF_CLASS_SCOUT, TF_CLASS_ENGINEER );
 	const char *name = g_aRawPlayerClassNamesShort[ which ];
 
 	if ( FStrEq( name, "spy" ) )
 	{
 		m_bSpy = true;
-	}*/
+	}
 
-	//SetModel( CFmtStr( "models/player/%s.mdl", name ) );
-
-	SetModel( SKELETON_MODEL );
-
+	if (tf_zombie_use_old_models.GetBool())
+	{
+		SetModel(CFmtStr("models/player/%s.mdl", name));
+	}
+	else
+	{
+		SetModel(SKELETON_MODEL);
+	}
 	BaseClass::Spawn();
 
 	const int health = 50;
@@ -167,33 +175,36 @@ void CZombie::Spawn( void )
 	SetAbsAngles( qAngle );
 
 	// Spawn Pos
-	GetBodyInterface()->StartActivity( ACT_TRANSITION );
+	GetBodyInterface()->StartActivity(ACT_TRANSITION);
 
-	//int iSkinIndex = GetTeamNumber() == TF_TEAM_RED ? 0 : 1;
+	if (tf_zombie_use_old_models.GetBool())
+	{
+		int iSkinIndex = GetTeamNumber() == TF_TEAM_RED ? 0 : 1;
 
-	//m_zombieParts = (CBaseAnimating *)CreateEntityByName( "prop_dynamic" );
-	//if ( m_zombieParts )
-	//{
-	//	m_zombieParts->SetModel( CFmtStr( "models/player/items/%s/%s_zombie.mdl", name, name ) );
-	//	m_zombieParts->m_nSkin = iSkinIndex;
+		m_zombieParts = (CBaseAnimating *)CreateEntityByName( "prop_dynamic" );
+		if ( m_zombieParts )
+		{
+			m_zombieParts->SetModel( CFmtStr( "models/player/items/%s/%s_zombie.mdl", name, name ) );
+			m_zombieParts->m_nSkin = iSkinIndex;
 
-	//	// bonemerge into our model
-	//	m_zombieParts->FollowEntity( this, true );
-	//}
+			// bonemerge into our model
+			m_zombieParts->FollowEntity( this, true );
+		}
 
-	//if ( m_bSpy )
-	//{
-	//	// Spy has a bunch of extra skins used to adjust the mask
-	//	iSkinIndex += 22;
-	//}
-	//else
-	//{
-	//	// 4: red zombie
-	//	// 5: blue zombie
-	//	// 6: red zombie invuln
-	//	// 7: blue zombie invuln
-	//	iSkinIndex += 4;
-	//}
+		if ( m_bSpy )
+		{
+			// Spy has a bunch of extra skins used to adjust the mask
+			iSkinIndex += 22;
+		}
+		else
+		{
+			// 4: red zombie
+			// 5: blue zombie
+			// 6: red zombie invuln
+			// 7: blue zombie invuln
+			iSkinIndex += 4;
+		}
+	}
 
 	switch ( GetTeamNumber() )
 	{
@@ -407,6 +418,7 @@ void CZombie::SetSkeletonType( SkeletonType_t nType )
 	}
 	else if ( nType == SKELETON_MINI )
 	{
+		
 		SetModel( SKELETON_MODEL );
 		SetModelScale( 0.5f );
 		m_flHeadScale = 3.f;
@@ -414,6 +426,12 @@ void CZombie::SetSkeletonType( SkeletonType_t nType )
 		if( TFGameRules()->GetHalloweenScenario() == CTFGameRules::HALLOWEEN_SCENARIO_DOOMSDAY )
 		{
 			int iModelIndex = RandomInt( 0, ARRAYSIZE( s_skeletonHatModels ) - 1 );
+
+			if (tf_zombie_use_old_models.GetBool())
+			{
+				iModelIndex = tf_halloween_skeleton_test_hat.GetInt() > 0 ? tf_halloween_skeleton_test_hat.GetInt() : iModelIndex;
+			}
+
 			const char *pszHat = s_skeletonHatModels[ iModelIndex ];
 			AddHat( pszHat );
 		}

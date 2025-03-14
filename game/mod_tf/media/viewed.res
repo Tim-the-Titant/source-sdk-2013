@@ -2,7 +2,7 @@
 {
 	"ctf_2fort"
 	{
-		"viewed"		"11"
+		"viewed"		"18"
 	}
 	"ctf_doublecross"
 	{
@@ -22,6 +22,26 @@
 	}
 	"plr_pipeline"
 	{
+		"viewed"		"12"
+	}
+	"plr_hightower"
+	{
+		"viewed"		"7"
+	}
+	"pl_badwater"
+	{
+		"viewed"		"7"
+	}
+	"ctf_well"
+	{
 		"viewed"		"2"
+	}
+	"pass_brickyard"
+	{
+		"viewed"		"2"
+	}
+	"pd_atom_smash"
+	{
+		"viewed"		"1"
 	}
 }
