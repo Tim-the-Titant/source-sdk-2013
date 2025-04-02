@@ -2802,6 +2802,7 @@ void CTFPlayer::PrecacheMvM()
 	PrecacheScriptSound( "MVM.DeployBombGiant" );
 	PrecacheScriptSound( "Weapon_Upgrade.ExplosiveHeadshot" );
 	PrecacheScriptSound( "Spy.MVM_Chuckle" );
+	PrecacheScriptSound("Spy.MVM_TeaseVictim");
 	PrecacheScriptSound( "MVM.Robot_Engineer_Spawn" );
 	PrecacheScriptSound( "MVM.Robot_Teleporter_Deliver" );
 	PrecacheScriptSound( "MVM.MoneyPickup" );
@@ -10048,8 +10049,9 @@ void CTFPlayer::AddConnectedPlayers( CUtlVector<CTFPlayer*> &vecPlayers, CTFPlay
 
 	for ( int i = 0 ; i < pPlayerToConsider->m_Shared.GetNumHealers() ; i++ )
 	{
-		CTFPlayer *pMedic = ToTFPlayer( pPlayerToConsider->m_Shared.GetHealerByIndex( i ) );
-		if ( pMedic )
+		// Make sure the Medic is healing us specifically - don't count AoE healing
+		CTFPlayer* pMedic = ToTFPlayer(pPlayerToConsider->m_Shared.GetHealerByIndex(i));
+		if (pMedic && pMedic->MedicGetHealTarget() == pPlayerToConsider)
 		{
 			AddConnectedPlayers( vecPlayers, pMedic );
 		}

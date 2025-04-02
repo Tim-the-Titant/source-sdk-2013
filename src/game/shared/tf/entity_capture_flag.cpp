@@ -509,7 +509,7 @@ void CCaptureFlag::DestroySiren( void )
 //-----------------------------------------------------------------------------
 void CCaptureFlag::UpdateGlowEffect( void )
 {
-	if ( !m_pGlowEffect )
+	/*if (!m_pGlowEffect)
 	{
 		m_pGlowEffect = new CGlowObject( this, Vector( 0.76f, 0.76f, 0.76f ), 1.0, true );
 	}
@@ -528,7 +528,7 @@ void CCaptureFlag::UpdateGlowEffect( void )
 			TeamplayRoundBasedRules()->GetTeamGlowColor( GetTeamNumber(), r, g, b );
 			m_pGlowEffect->SetColor( Vector( r, g, b ) );
 		}
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------

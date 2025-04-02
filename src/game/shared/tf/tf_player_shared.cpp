@@ -9700,7 +9700,9 @@ void CTFPlayerShared::StunPlayer( float flTime, float flReductionAmount, int iSt
 
 	float flRemapAmount = RemapValClamped( flReductionAmount, 0.0, 1.0, 0, 255 );
 
+#ifdef GAME_DLL
 	int iOldStunFlags = GetStunFlags();
+#endif
 
 	// Already stunned
 	bool bStomp = false;
@@ -9714,7 +9716,7 @@ void CTFPlayerShared::StunPlayer( float flTime, float flReductionAmount, int iSt
 				bStomp = true;
 			}
 			// It's weaker.  Would it expire before the active?
-			else if ( gpGlobals->curtime + flTime < GetActiveStunInfo()->flExpireTime )
+			else if ( gpGlobals->curtime + flTime < GetActiveStunInfo()->flExpireTime )	
 			{
 				// Ignore
 				return;
@@ -11093,14 +11095,14 @@ void CTFPlayer::SetItem( CTFItem *pItem )
 	m_hItem = pItem;
 
 #ifndef CLIENT_DLL
-	if ( pItem )
+	/*if (pItem)
 	{
 		AddGlowEffect();
 	}
 	else
 	{
 		RemoveGlowEffect();
-	}
+	}*/
 
 	if ( pItem && pItem->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
@@ -13336,6 +13338,13 @@ int CTFPlayerShared::GetSequenceForDeath( CBaseAnimating* pRagdoll, bool bBurnin
 		break;
 	case TF_DMG_CUSTOM_BACKSTAB:
 		iDeathSeq = pRagdoll->LookupSequence( "primary_death_backstab" );
+		break;
+	case TF_DMG_CUSTOM_BURNING:
+	case TF_DMG_CUSTOM_BURNING_ARROW:
+	case TF_DMG_CUSTOM_BURNING_FLARE:
+	case TF_DMG_CUSTOM_FLARE_PELLET:
+	case TF_DMG_CUSTOM_PLASMA_CHARGED:
+		iDeathSeq = pRagdoll->LookupSequence("primary_death_burning");
 		break;
 	}
 

@@ -710,8 +710,8 @@ ConVar tf_mm_next_map_vote_time( "tf_mm_next_map_vote_time", "30", FCVAR_REPLICA
 
 static float g_fEternaweenAutodisableTime = 0.0f;
 
-ConVar tf_spec_xray( "tf_spec_xray", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allows spectators to see player glows. 1 = same team, 2 = both teams" );
-ConVar tf_spawn_glows_duration( "tf_spawn_glows_duration", "10", FCVAR_NOTIFY | FCVAR_REPLICATED, "How long should teammates glow after respawning\n" );
+ConVar tf_spec_xray( "tf_spec_xray", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allows spectators to see player glows. 1 = same team, 2 = both teams" );
+ConVar tf_spawn_glows_duration( "tf_spawn_glows_duration", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "How long should teammates glow after respawning\n" );
 
 #ifdef GAME_DLL
 void cc_tf_forced_holiday_changed( IConVar *pConVar, const char *pOldString, float flOldValue )
@@ -5679,7 +5679,7 @@ void CTFGameRules::RadiusDamage( CTFRadiusDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CTFRadiusDamageInfo::CalculateFalloff( void )
 {
-	if ( dmgInfo->GetDamageType() & DMG_RADIUS_MAX )
+	if (dmgInfo->GetDamageCustom() != TF_DMG_CUSTOM_STICKBOMB_EXPLOSION && dmgInfo->GetDamageType() & DMG_RADIUS_MAX)
 		flFalloff = 0.f;
 	else if ( dmgInfo->GetDamageType() & DMG_HALF_FALLOFF )
 		flFalloff = 0.5f;
@@ -6109,9 +6109,9 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 					eDamageBonusCond = TF_COND_OFFENSEBUFF;
 				}
 			}
-			else if ( pTFAttacker && (bitsDamage & DMG_RADIUS_MAX) && pWeapon && ( (pWeapon->GetWeaponID() == TF_WEAPON_SWORD) || (pWeapon->GetWeaponID() == TF_WEAPON_BOTTLE)|| (pWeapon->GetWeaponID() == TF_WEAPON_WRENCH) ) )
+			else if (pTFAttacker && (bitsDamage & DMG_RADIUS_MAX) && pWeapon && ((pWeapon->GetWeaponID() == TF_WEAPON_SWORD) || (pWeapon->GetWeaponID() == TF_WEAPON_BOTTLE) || (pWeapon->GetWeaponID() == TF_WEAPON_STICKBOMB) || (pWeapon->GetWeaponID() == TF_WEAPON_WRENCH)))
 			{
-				// First sword or bottle attack after a charge is a mini-crit.
+				// First sword, bottle, or caber attack after a charge is a mini-crit.
 				bAllSeeCrit = true;
 				info.SetCritType( CTakeDamageInfo::CRIT_MINI );
 				eBonusEffect = kBonusEffect_MiniCrit;
@@ -16968,7 +16968,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 					( pRoundStats->m_iStat[TFSTAT_TELEPORTS] / TF_SCORE_TELEPORTS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_INVULNS] / TF_SCORE_INVULN ) +
 					( pRoundStats->m_iStat[TFSTAT_REVENGE] / TF_SCORE_REVENGE ) +
-					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR );
+					(pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR) +
 					( pRoundStats->m_iStat[TFSTAT_CURRENCY_COLLECTED] / TF_SCORE_CURRENCY_COLLECTED );
 
 	if ( pPlayer )

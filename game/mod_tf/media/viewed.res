@@ -2,7 +2,7 @@
 {
 	"ctf_2fort"
 	{
-		"viewed"		"18"
+		"viewed"		"27"
 	}
 	"ctf_doublecross"
 	{

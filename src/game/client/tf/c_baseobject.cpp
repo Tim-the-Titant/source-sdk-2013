@@ -141,11 +141,11 @@ void C_BaseObject::UpdateOnRemove( void )
 
 	DestroyBoneAttachments();
 
-	CTFHudSpectatorExtras *pSpectatorExtras = GET_HUDELEMENT( CTFHudSpectatorExtras );
+	/*CTFHudSpectatorExtras* pSpectatorExtras = GET_HUDELEMENT(CTFHudSpectatorExtras);
 	if ( pSpectatorExtras )
  	{
 		pSpectatorExtras->RemoveEntity( entindex() );
- 	}
+ 	}*/
 
 	BaseClass::UpdateOnRemove();
 }
