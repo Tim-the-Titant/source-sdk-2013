@@ -5948,8 +5948,9 @@ void CTFPlayer::HandleAnimEvent( animevent_t *pEvent )
 		char szAttrName[128];
 		float flVal;
 		float flDuration;
-		if ( sscanf( pEvent->options, "%s %f %f", szAttrName, &flVal, &flDuration ) == 3 )
+		if (sscanf(pEvent->options, "%127s %f %f", szAttrName, &flVal, &flDuration) == 3)
 		{
+			szAttrName[ARRAYSIZE(szAttrName) - 1] = '\0';
 			Assert( flDuration > 0.f );
 			AddCustomAttribute( szAttrName, flVal, flDuration );
 		}
@@ -6850,9 +6851,10 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName, bool bAllowSpaw
 			}
 		}
 		 
-		bool bCivilianOkay = false;
+		bool bCivilianOkay = true;
 
-		if ( !bCivilianOkay && ( i >= TF_LAST_NORMAL_CLASS ) )
+		//if ( !bCivilianOkay && ( i >= TF_LAST_NORMAL_CLASS ) )
+		if (!bCivilianOkay && (i > TF_LAST_NORMAL_CLASS))
 		{
 			Warning( "HandleCommand_JoinClass( %s ) - invalid class name.\n", pClassName );
 			return;
@@ -9096,44 +9098,40 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 	
-	if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_MEDIC ) )
+	if (pTFAttacker && pTFAttacker->IsPlayerClass(TF_CLASS_MEDIC) && pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_BONESAW)
 	{
-		CTFWeaponBase *pAttackerWeapon = pTFAttacker->GetActiveTFWeapon();
-		if ( pAttackerWeapon && pAttackerWeapon->GetWeaponID() == TF_WEAPON_BONESAW )
+		CTFBonesaw* pBoneSaw = static_cast<CTFBonesaw*>(pWeapon);
+		if (pBoneSaw->GetBonesawType() == BONESAW_UBER_SAVEDONDEATH)
 		{
-			CTFBonesaw *pBoneSaw = static_cast< CTFBonesaw* >( pAttackerWeapon );
-			if ( pBoneSaw->GetBonesawType() == BONESAW_UBER_SAVEDONDEATH )
+			// Spawn their spleen
+			CPhysicsProp* pRandomInternalOrgan = dynamic_cast<CPhysicsProp*>(CreateEntityByName("prop_physics_override"));
+			if (pRandomInternalOrgan)
 			{
-				// Spawn their spleen
-				CPhysicsProp *pRandomInternalOrgan = dynamic_cast< CPhysicsProp* >( CreateEntityByName( "prop_physics_override" ) );
-				if ( pRandomInternalOrgan )
-				{
-					pRandomInternalOrgan->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-					pRandomInternalOrgan->AddFlag( FL_GRENADE );
-					char buf[512];
-					Q_snprintf( buf, sizeof( buf ), "%.10f %.10f %.10f", GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z );
-					pRandomInternalOrgan->KeyValue( "origin", buf );
-					Q_snprintf( buf, sizeof( buf ), "%.10f %.10f %.10f", GetAbsAngles().x, GetAbsAngles().y, GetAbsAngles().z );
-					pRandomInternalOrgan->KeyValue( "angles", buf );
-					pRandomInternalOrgan->KeyValue( "model", "models/player/gibs/random_organ.mdl" );
-					pRandomInternalOrgan->KeyValue( "fademindist", "-1" );
-					pRandomInternalOrgan->KeyValue( "fademaxdist", "0" );
-					pRandomInternalOrgan->KeyValue( "fadescale", "1" );
-					pRandomInternalOrgan->KeyValue( "inertiaScale", "1.0" );
-					pRandomInternalOrgan->KeyValue( "physdamagescale", "0.1" );
-					DispatchSpawn( pRandomInternalOrgan );
-					pRandomInternalOrgan->m_takedamage = DAMAGE_YES;	// Take damage, otherwise this can block trains
-					pRandomInternalOrgan->SetHealth( 100 );
-					pRandomInternalOrgan->Activate();
+				pRandomInternalOrgan->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+				pRandomInternalOrgan->AddFlag(FL_GRENADE);
+				char buf[512];
+				Q_snprintf(buf, sizeof(buf), "%.10f %.10f %.10f", GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z);
+				pRandomInternalOrgan->KeyValue("origin", buf);
+				Q_snprintf(buf, sizeof(buf), "%.10f %.10f %.10f", GetAbsAngles().x, GetAbsAngles().y, GetAbsAngles().z);
+				pRandomInternalOrgan->KeyValue("angles", buf);
+				pRandomInternalOrgan->KeyValue("model", "models/player/gibs/random_organ.mdl");
+				pRandomInternalOrgan->KeyValue("fademindist", "-1");
+				pRandomInternalOrgan->KeyValue("fademaxdist", "0");
+				pRandomInternalOrgan->KeyValue("fadescale", "1");
+				pRandomInternalOrgan->KeyValue("inertiaScale", "1.0");
+				pRandomInternalOrgan->KeyValue("physdamagescale", "0.1");
+				DispatchSpawn(pRandomInternalOrgan);
+				pRandomInternalOrgan->m_takedamage = DAMAGE_YES;	// Take damage, otherwise this can block trains
+				pRandomInternalOrgan->SetHealth(100);
+				pRandomInternalOrgan->Activate();
 
-					Vector vecImpulse = RandomVector( -1.f, 1.f );
-					vecImpulse.z = 1.f;
-					VectorNormalize( vecImpulse );
-					Vector vecVelocity = vecImpulse * 250.0;
-					pRandomInternalOrgan->ApplyAbsVelocityImpulse( vecVelocity );
+				Vector vecImpulse = RandomVector(-1.f, 1.f);
+				vecImpulse.z = 1.f;
+				VectorNormalize(vecImpulse);
+				Vector vecVelocity = vecImpulse * 250.0;
+				pRandomInternalOrgan->ApplyAbsVelocityImpulse(vecVelocity);
 
-					pRandomInternalOrgan->ThinkSet( &CBaseEntity::SUB_Remove, gpGlobals->curtime + 5.f, "DieContext" );
-				}
+				pRandomInternalOrgan->ThinkSet(&CBaseEntity::SUB_Remove, gpGlobals->curtime + 5.f, "DieContext");
 			}
 		}
 	}
@@ -9680,6 +9678,12 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		else if ( !( info.GetDamageType() & DMG_FALL ) )
 		{
 			m_Shared.NoteLastDamageTime( m_lastDamageAmount );
+		}
+
+		// Set our disguise health when taking falldamage to make it more believable
+		if (m_Shared.InCond(TF_COND_DISGUISED) && info.GetDamageType() & DMG_FALL)
+		{
+			m_Shared.SetDisguiseHealth(Max(m_Shared.GetDisguiseHealth() - RoundFloatToInt(info.GetDamage()), 1));
 		}
 	}
 
@@ -10728,22 +10732,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 				if ( iExplosiveShot )
 				{
 					pSniper->ExplosiveHeadShot( pTFAttacker, this );
-				}
-			}
-		}
-	}
-
-	// Prevents a sandwich ignore-ammo-while-taking-damage-and-eating alias exploit
-	if ( m_Shared.InCond( TF_COND_TAUNTING ) && m_Shared.GetTauntIndex() == TAUNT_BASE_WEAPON )
-	{
-		if ( IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
-		{
-			CTFLunchBox *pLunchBox = dynamic_cast <CTFLunchBox *> ( m_Shared.GetActiveTFWeapon() );
-			if ( pLunchBox )
-			{
-				if ( ( pLunchBox->GetLunchboxType() != LUNCHBOX_CHOCOLATE_BAR ) && ( pLunchBox->GetLunchboxType() != LUNCHBOX_FISHCAKE ) )
-				{
-					pLunchBox->DrainAmmo( true );
 				}
 			}
 		}
@@ -15070,8 +15058,8 @@ void CTFPlayer::PlayFlinch( const CTakeDamageInfo &info )
 	if ( !IsAlive() )
 		return;
 
-	// No pain flinches while disguised, our man has supreme discipline
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
+	// No pain flinches while disguised, our man has supreme discipline unless he falls
+	if (m_Shared.InCond(TF_COND_DISGUISED) && !(info.GetDamageType() & DMG_FALL))
 		return;
 
 	PlayerAnimEvent_t flinchEvent;
@@ -15133,10 +15121,6 @@ void CTFPlayer::PainSound( const CTakeDamageInfo &info )
 	if ( !IsAlive() )
 		return;
 
-	// no pain sounds while disguised, our man has supreme discipline
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-		return;
-
 	if ( m_flNextPainSoundTime > gpGlobals->curtime )
 		return;
 
@@ -15151,11 +15135,36 @@ void CTFPlayer::PainSound( const CTakeDamageInfo &info )
 			TFPlayerClassData_t *pData = GetPlayerClass()->GetData();
 			if ( pData )
 			{
-				EmitSound( pData->GetDeathSound( DEATH_SOUND_GENERIC ) );
+				CPASFilter filter(GetAbsOrigin());
+				if (m_Shared.InCond(TF_COND_DISGUISED))
+				{
+					filter.RemoveRecipientsByTeam(GetGlobalTFTeam((GetTeamNumber() == TF_TEAM_RED) ? TF_TEAM_BLUE : TF_TEAM_RED));
+					filter.RemoveRecipient(this);
+				}
+
+				EmitSound(filter, entindex(), pData->GetDeathSound(DEATH_SOUND_GENERIC));
+			}
+
+			if (m_Shared.InCond(TF_COND_DISGUISED))
+			{
+				TFPlayerClassData_t* pDisguiseData = GetPlayerClassData(m_Shared.GetDisguiseClass());
+				if (pDisguiseData)
+				{
+					CPASFilter disguisedFilter(GetAbsOrigin());
+					disguisedFilter.RemoveRecipientsByTeam(GetGlobalTeam(TEAM_SPECTATOR));
+					disguisedFilter.RemoveRecipientsByTeam(GetGlobalTeam(TEAM_UNASSIGNED));
+					disguisedFilter.RemoveRecipientsByTeam(GetGlobalTFTeam(GetTeamNumber()));
+					disguisedFilter.AddRecipient(this);
+					EmitSound(disguisedFilter, entindex(), pDisguiseData->GetDeathSound(DEATH_SOUND_GENERIC));
+				}
 			}
 		}
 		return;
 	}
+
+	// no pain sounds while disguised, our man has supreme discipline
+	if (m_Shared.InCond(TF_COND_DISGUISED))
+		return;
 
 	// No sound for DMG_GENERIC
 	if ( info.GetDamageType() == 0 || info.GetDamageType() == DMG_PREVENT_PHYSICS_FORCE )
@@ -17933,7 +17942,7 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 				m_iTauntAttack = TAUNTATK_HEAVY_EAT;
 
 				// Only count sandviches for "eat 100 sandviches" achievement
-				CTFLunchBox *pLunchbox = (CTFLunchBox*)pActiveWeapon;
+				CTFLunchBox *pLunchbox = (CTFLunchBox *)pActiveWeapon;
 				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_ROBO ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_FESTIVE ) )
 				{
 					AwardAchievement( ACHIEVEMENT_TF_HEAVY_EAT_SANDWICHES );
@@ -18639,32 +18648,36 @@ void CTFPlayer::DoTauntAttack( void )
 				float flDropDeadTime = ( 100.f / tf_scout_energydrink_consume_rate.GetFloat() ) + 1.f;	// Just in case.  Normally over in 8 seconds.
 
 				CTFLunchBox *pLunchbox = static_cast< CTFLunchBox* >( pActiveWeapon );
-				if ( pLunchbox && pLunchbox->GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS )
+				if (pLunchbox)
 				{
-					m_Shared.AddCond( TF_COND_ENERGY_BUFF, flDropDeadTime );
-				}
-				else
-				{
-					m_Shared.AddCond( TF_COND_PHASE, flDropDeadTime );
-
-					if ( HasTheFlag() )
+					if (pLunchbox->GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS)
 					{
-						bool bShouldDrop = true;
+						m_Shared.AddCond(TF_COND_ENERGY_BUFF, flDropDeadTime);
+					}
+					else
+					{
+						m_Shared.AddCond(TF_COND_PHASE, flDropDeadTime);
 
-						// Always allow teams to hear each other in TD mode
-						if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
+						if (HasTheFlag())
 						{
-							bShouldDrop = false;
-						}
+							bool bShouldDrop = true;
 
-						if ( bShouldDrop )
-						{
-							DropFlag();
+							// Always allow teams to hear each other in TD mode
+							if (TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS)
+							{
+								bShouldDrop = false;
+							}
+
+							if (bShouldDrop)
+							{
+								DropFlag();
+							}
 						}
 					}
-				}
 
-				SelectLastItem();
+					pLunchbox->DrainAmmo();
+					m_Shared.SetBiteEffectWasApplied();
+				}
 			}
 		}
 	}

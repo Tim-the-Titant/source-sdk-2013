@@ -41,7 +41,16 @@ ActionResult< CTFBot >	CTFBotCapturePoint::Update( CTFBot *me, float interval )
 	if ( TFGameRules()->InSetup() )
 	{
 		// wait until the gates open, then path
-		m_path.Invalidate();
+		m_goalArea = ChooseGoalArea(me);
+		if (m_goalArea)
+		{
+			CTFBotPathCost cost(me, SAFEST_ROUTE);
+			m_path.Compute(me, m_goalArea->GetCenter(), cost);
+		}
+		else
+		{
+			m_path.Invalidate();
+		}
 		m_repathTimer.Start( RandomFloat( 1.0f, 2.0f ) );
 
 		return Continue();
@@ -155,6 +164,32 @@ ActionResult< CTFBot >	CTFBotCapturePoint::Update( CTFBot *me, float interval )
 	return Continue();
 }
 
+//---------------------------------------------------------------------------------------------
+CTFNavArea* CTFBotCapturePoint::ChooseGoalArea(CTFBot* me)
+{
+	CUtlVector< CTFNavArea* > goalVector;
+
+	TheTFNavMesh()->CollectSpawnRoomThresholdAreas(&goalVector, GetEnemyTeam(me->GetTeamNumber()));
+
+	CTeamControlPoint* point = me->GetMyControlPoint();
+	if (point && !point->IsLocked())
+	{
+		// add current control point as a seek goal
+		const CUtlVector< CTFNavArea* >* controlPointAreas = TheTFNavMesh()->GetControlPointAreas(point->GetPointIndex());
+		if (controlPointAreas && controlPointAreas->Count() > 0)
+		{
+			goalVector.AddToTail(controlPointAreas->Element(RandomInt(0, controlPointAreas->Count() - 1)));
+		}
+	}
+
+	// pick a new goal
+	if (goalVector.Count() > 0)
+	{
+		return goalVector[RandomInt(0, goalVector.Count() - 1)];
+	}
+
+	return NULL;
+}
 
 //---------------------------------------------------------------------------------------------
 ActionResult< CTFBot > CTFBotCapturePoint::OnResume( CTFBot *me, Action< CTFBot > *interruptingAction )

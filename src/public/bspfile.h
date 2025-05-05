@@ -57,12 +57,12 @@
 // Common limits
 // leaffaces, leafbrushes, planes, and verts are still bounded by
 // 16 bit short limits
-#define	MAX_MAP_MODELS					1024
-#define	MAX_MAP_BRUSHES					8192
-#define	MAX_MAP_ENTITIES				8192
-#define	MAX_MAP_TEXINFO					12288
-#define MAX_MAP_TEXDATA					2048
-#define MAX_MAP_DISPINFO				2048
+#define	MAX_MAP_MODELS					2048
+#define	MAX_MAP_BRUSHES					16384
+#define	MAX_MAP_ENTITIES				32768
+#define	MAX_MAP_TEXINFO					16384
+#define MAX_MAP_TEXDATA					8096
+#define MAX_MAP_DISPINFO				8096
 #define MAX_MAP_DISP_VERTS				( MAX_MAP_DISPINFO * ((1<<MAX_MAP_DISP_POWER)+1) * ((1<<MAX_MAP_DISP_POWER)+1) )
 #define MAX_MAP_DISP_TRIS				( (1 << MAX_MAP_DISP_POWER) * (1 << MAX_MAP_DISP_POWER) * 2 )
 #define MAX_DISPVERTS					NUM_DISP_POWER_VERTS( MAX_MAP_DISP_POWER )
@@ -90,9 +90,9 @@
 #define	MAX_MAP_LIGHTING				0x1000000
 #define	MAX_MAP_VISIBILITY				0x1000000			// increased BSPVERSION 7
 #define	MAX_MAP_TEXTURES				1024
-#define MAX_MAP_WORLDLIGHTS				8192
+#define MAX_MAP_WORLDLIGHTS				65536
 #define MAX_MAP_CUBEMAPSAMPLES			1024
-#define MAX_MAP_OVERLAYS				512 
+#define MAX_MAP_OVERLAYS				8192 
 #define MAX_MAP_WATEROVERLAYS			16384
 #define MAX_MAP_TEXDATA_STRING_DATA		256000
 #define MAX_MAP_TEXDATA_STRING_TABLE	65536
@@ -100,6 +100,8 @@
 #define MAX_MAP_PRIMITIVES				32768
 #define MAX_MAP_PRIMVERTS				65536
 #define MAX_MAP_PRIMINDICES				65536
+#define MAX_MAP_DETAIL_PROPS			65536	// The object lump is variable-sized, so there's no strict limit.  
+												// The MAX_MAP_DETAIL_PROPS limit is just a warning for the user.
 
 #else
 

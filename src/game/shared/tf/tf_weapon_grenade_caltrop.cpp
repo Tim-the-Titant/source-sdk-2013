@@ -93,7 +93,8 @@ CTFGrenadeCaltropProjectile* CTFGrenadeCaltropProjectile::Create( const Vector &
 																  CBaseCombatCharacter *pOwner, const CTFWeaponInfo &weaponInfo,
 																  float timer, int iFlags )
 {
-	CTFGrenadeCaltropProjectile *pGrenade = static_cast<CTFGrenadeCaltropProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_caltrop_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	//CTFGrenadeCaltropProjectile *pGrenade = static_cast<CTFGrenadeCaltropProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_caltrop_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	CTFGrenadeCaltropProjectile *pGrenade = static_cast<CTFGrenadeCaltropProjectile*>(CTFWeaponBaseGrenadeProj::Create("tf_weapon_grenade_caltrop_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer));
 	if ( pGrenade )
 	{
 		pGrenade->ApplyLocalAngularVelocityImpulse( angVelocity );
@@ -140,11 +141,11 @@ void CTFGrenadeCaltropProjectile::BounceSound( void )
 //-----------------------------------------------------------------------------
 void CTFGrenadeCaltropProjectile::Detonate()
 {
-	if ( ShouldNotDetonate() )
-	{
-		RemoveGrenade();
-		return;
-	}
+	//if ( ShouldNotDetonate() )
+	//{
+		//RemoveGrenade();
+		//return;
+	//}
 
 	// have the caltrop disappear
 	UTIL_Remove( this );
@@ -182,7 +183,7 @@ void CTFGrenadeCaltropProjectile::Touch( CBaseEntity *pOther )
 
 #ifdef GAME_DLL
 	// Do the leg damage to the player
-	CTakeDamageInfo info( this, GetThrower(), GRENADE_CALTROP_DAMAGE, DMG_LEG_DAMAGE | DMG_PREVENT_PHYSICS_FORCE );
+	CTakeDamageInfo info( this, GetThrower(), GRENADE_CALTROP_DAMAGE, TF_DMG_LEG_DAMAGE | DMG_PREVENT_PHYSICS_FORCE );
 	pOther->TakeDamage( info );
 
 	// have the caltrop disappear

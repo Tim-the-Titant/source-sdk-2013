@@ -27,6 +27,7 @@
 	#include "tf_hud_menu_engy_destroy.h"
 	#include "tf_hud_menu_spy_disguise.h"
 	#include "prediction.h"
+	#include "tf_hud_menu_spy_build.h"
 #endif
 
 //=============================================================================
@@ -257,6 +258,25 @@ CHudBaseBuildMenu *CTFWeaponPDA_Spy::GetBuildMenu() const
 }
 #endif // CLIENT_DLL
 
+//==============================
+
+IMPLEMENT_NETWORKCLASS_ALIASED(TFWeaponPDA_Spy_Build, DT_TFWeaponPDA_Spy_Build)
+
+BEGIN_NETWORK_TABLE(CTFWeaponPDA_Spy_Build, DT_TFWeaponPDA_Spy_Build)
+END_NETWORK_TABLE()
+
+BEGIN_PREDICTION_DATA(CTFWeaponPDA_Spy_Build)
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS(tf_weapon_pda_spy_build, CTFWeaponPDA_Spy_Build);
+PRECACHE_WEAPON_REGISTER(tf_weapon_pda_spy_build);
+
+#ifdef CLIENT_DLL
+CHudBaseBuildMenu* CTFWeaponPDA_Spy_Build::GetBuildMenu() const
+{
+	return GET_HUDELEMENT(CHudMenuSpyBuild);
+}
+#endif // CLIENT_DLL
 
 //==============================
 
@@ -473,6 +493,44 @@ bool	CTFWeaponPDA_Engineer_Destroy::VisibleInWeaponSelection( void )
 	}
 
 	return BaseClass::VisibleInWeaponSelection();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFWeaponPDA_Spy_Build::CanDeploy(void)
+{
+	if (!TFGameRules() || !TFGameRules()->GameModeUsesUpgrades())
+		return false;
+
+	CTFPlayer* pPlayer = GetTFPlayerOwner();
+	if (!pPlayer || !pPlayer->m_Shared.CanBuildSpyTraps())
+		return false;
+
+	return BaseClass::CanDeploy();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: UI Progress
+//-----------------------------------------------------------------------------
+float CTFWeaponPDA_Spy_Build::GetProgress(void)
+{
+	CTFPlayer* pPlayer = GetTFPlayerOwner();
+	if (!pPlayer)
+		return 0.f;
+
+	return pPlayer->m_Shared.GetRageMeter() / 100.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CTFWeaponPDA_Spy_Build::VisibleInWeaponSelection(void)
+{
+	if (!BaseClass::VisibleInWeaponSelection())
+		return false;
+
+	return TFGameRules() && TFGameRules()->GameModeUsesUpgrades();
 }
 
 

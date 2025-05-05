@@ -425,6 +425,7 @@ static const char *g_aConditionNames[] =
 	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 128
 	"TF_COND_POWERUPMODE_DOMINANT",             // = 129
 	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 130
+	"TF_COND_MINICRITBOOSTED",					// = 131
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -432,6 +433,14 @@ static const char *g_aConditionNames[] =
 
 	// ******** Keep this block last! ********
 	// Keep experimental conditions below and graduate out of it before shipping
+		"TF_COND_NO_COMBAT_SPEED_BOOST",		// STAGING_ENGY
+		"TF_COND_TRANQ_SPY_BOOST",			// STAGING_SPY
+		"TF_COND_TRANQ_MARKED",
+			"TF_COND_SPACE_GRAVITY",
+			"TF_COND_SELF_CONC",
+		"TF_COND_STEALTHED_PHASE",
+		"TF_COND_CLIP_OVERLOAD",
+		"TF_COND_SPY_CLASS_STEAL",
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_aConditionNames ) == TF_COND_LAST );
 
@@ -709,6 +718,8 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_GRENADE_JAR_GAS",
 	"TF_WEPON_FLAME_BALL",
 
+	"TF_WEAPON_SNIPERRIFLE_REVOLVER",
+
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_aWeaponNames ) == TF_WEAPON_COUNT );
 
@@ -825,6 +836,8 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC, // TF_WEAPON_GRENADE_JAR_GAS
 	DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE, // TF_WEAPON_FLAME_BALL
 
+	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_SNIPERRIFLE_REVOLVER,
+
 };
 
 const char *g_szSpecialDamageNames[] =
@@ -915,6 +928,7 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED",
 	"TF_DMG_CUSTOM_KRAMPUS_MELEE",
 	"TF_DMG_CUSTOM_KRAMPUS_RANGED",
+	"TF_DMG_LEG_DAMAGE",
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_szSpecialDamageNames ) == TF_DMG_CUSTOM_END );
 
@@ -973,6 +987,14 @@ const char *g_szProjectileNames[] =
 	"projectile_jar_gas",
 	"tf_projectile_balloffire",
 
+	// Staging
+	"projectile_tranq",
+	"projectile_sniperbullet",
+	"projectile_throwing_knife",
+	"projectile_grenade_concussion",
+	"projectile_grenade_teleport",
+	"projectile_jarate_bolt",
+
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_szProjectileNames ) == TF_NUM_PROJECTILES );
 
@@ -1010,6 +1032,14 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_THROWABLE,
 	TF_WEAPON_JAR_GAS,
 	TF_WEAPON_FLAME_BALL,
+
+	// Staging
+	TF_WEAPON_REVOLVER,
+	TF_WEAPON_SNIPERRIFLE,
+	TF_WEAPON_THROWABLE,
+	TF_WEAPON_THROWABLE,
+	TF_WEAPON_THROWABLE,
+	TF_WEAPON_CROSSBOW,
 
 };
 
@@ -1368,6 +1398,8 @@ CObjectInfo g_ObjectInfos[OBJ_LAST] =
 	CObjectInfo( "OBJ_TELEPORTER" ),
 	CObjectInfo( "OBJ_SENTRYGUN" ),
 	CObjectInfo( "OBJ_ATTACHMENT_SAPPER" ),
+	CObjectInfo("OBJ_CATAPULT"),
+	CObjectInfo("OBJ_SPY_TRAP"),
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_ObjectInfos ) == OBJ_LAST );
 

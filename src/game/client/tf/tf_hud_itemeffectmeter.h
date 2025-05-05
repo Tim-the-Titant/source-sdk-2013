@@ -200,4 +200,41 @@ private:
 	bool					m_bBeeps;
 };
 
+class CHudItemEffectMeter_SpaceJump : public CHudItemEffectMeter
+{
+public:
+
+	CHudItemEffectMeter_SpaceJump(const char* pszElementName, C_TFPlayer* pPlayer);
+
+	// Effect Meter Logic
+	virtual bool		IsEnabled(void);
+	virtual float		GetProgress(void);
+	virtual bool		ShouldDraw(void);
+
+	virtual const char* GetLabelText(void) { return "Fuel"; }
+	virtual const char* GetResFile(void) { return "resource/UI/HudItemEffectMeter.res"; }
+
+	virtual int			GetCount(void) { return -1; }
+	virtual bool		ShouldFlash(void) { return false; }
+	virtual Color		GetFgColor(void) { return Color(255, 255, 255, 255); }
+};
+
+class CHudItemEffectMeter_Tranq : public CHudItemEffectMeter
+{
+public:
+
+	CHudItemEffectMeter_Tranq(const char* pszElementName, C_TFPlayer* pPlayer);
+
+	// Effect Meter Logic
+	virtual bool		IsEnabled(void);
+	virtual float		GetProgress(void);
+
+	virtual const char* GetLabelText(void) { return "Finesse"; }
+	virtual const char* GetResFile(void) { return "resource/UI/HudItemEffectMeter_Tranq.res"; }
+
+	virtual int			GetCount(void) { return -1; }
+	virtual bool		ShouldFlash(void) { return false; }
+	virtual Color		GetFgColor(void) { return Color(255, 255, 255, 255); }
+};
+
 #endif

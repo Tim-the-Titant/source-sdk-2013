@@ -87,7 +87,8 @@ CTFGrenadeNormalProjectile* CTFGrenadeNormalProjectile::Create( const Vector &po
 																const Vector &velocity, const AngularImpulse &angVelocity, 
 																CBaseCombatCharacter *pOwner, const CTFWeaponInfo &weaponInfo, float timer, int iFlags )
 {
-	CTFGrenadeNormalProjectile *pGrenade = static_cast<CTFGrenadeNormalProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_normal_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	//CTFGrenadeNormalProjectile *pGrenade = static_cast<CTFGrenadeNormalProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_normal_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	CTFGrenadeNormalProjectile *pGrenade = static_cast<CTFGrenadeNormalProjectile*>(CTFWeaponBaseGrenadeProj::Create("tf_weapon_grenade_normal_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer));
 	return pGrenade;
 }
 
@@ -124,11 +125,11 @@ void CTFGrenadeNormalProjectile::BounceSound( void )
 //-----------------------------------------------------------------------------
 void CTFGrenadeNormalProjectile::Detonate()
 {
-	if ( ShouldNotDetonate() )
-	{
-		RemoveGrenade();
-		return;
-	}
+	//if ( ShouldNotDetonate() )
+	//{
+		//RemoveGrenade();
+		//return;
+	//}
 
 	BaseClass::Detonate();
 }

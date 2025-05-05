@@ -32,6 +32,7 @@
 	#include "doors.h"
 	#include "ai_basenpc.h"
 	#include "env_zoom.h"
+	#include "ammodef.h"
 
 	extern int TrainSpeed(int iSpeed, int iMax);
 	
@@ -56,7 +57,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#if defined(GAME_DLL) && !defined(_XBOX)
+#if defined(GAME_DLL)
+	ConVar sv_infinite_ammo("sv_infinite_ammo", "0", FCVAR_CHEAT, "Player's active weapon will never run out of ammo. If set to 2 then player has infinite total ammo but still has to reload the magazine.");
+#if !defined(_XBOX)
 	extern ConVar sv_pushaway_max_force;
 	extern ConVar sv_pushaway_force;
 	extern ConVar sv_turbophysics;
@@ -85,6 +88,7 @@
 			return g_pGameRules->CanEntityBeUsePushed( pEntity );
 		}
 	};
+#endif
 #endif
 
 #ifdef CLIENT_DLL
@@ -289,6 +293,65 @@ void CBasePlayer::ItemPostFrame()
 
 #if !defined( CLIENT_DLL )
 	ImpulseCommands();
+
+	if (sv_infinite_ammo.GetBool() && GetActiveWeapon())
+	{
+		CBaseCombatWeapon* pWeapon = GetActiveWeapon();
+
+		// dont give clip ammo if set higher than 1 -copperpixel
+		if (sv_infinite_ammo.GetInt() == 1)
+		{
+#ifdef TF_DLL
+			CTFWeaponBase* pTFWeapon = static_cast<CTFWeaponBase*>(pWeapon);
+			if (pTFWeapon->IsEnergyWeapon())
+			{
+				pTFWeapon->Energy_SetEnergy(pTFWeapon->Energy_GetMaxEnergy());
+			}
+			else
+			{
+				pTFWeapon->m_iClip1 = pTFWeapon->GetMaxClip1();
+				pTFWeapon->m_iClip2 = pTFWeapon->GetMaxClip2();
+			}
+#else
+			pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
+			pWeapon->m_iClip2 = pWeapon->GetMaxClip2();
+#endif
+		}
+
+		int iPrimaryAmmoType = pWeapon->GetPrimaryAmmoType();
+		if (iPrimaryAmmoType >= 0)
+		{
+			GiveAmmo(
+				GetAmmoDef()->MaxCarry(iPrimaryAmmoType),
+				GetAmmoDef()->GetAmmoOfIndex(iPrimaryAmmoType)->pName,
+				true
+			);
+		}
+
+		int iSecondaryAmmoType = pWeapon->GetSecondaryAmmoType();
+		if (iSecondaryAmmoType >= 0)
+		{
+			GiveAmmo(
+				GetAmmoDef()->MaxCarry(iSecondaryAmmoType),
+				GetAmmoDef()->GetAmmoOfIndex(iSecondaryAmmoType)->pName,
+				true
+			);
+		}
+
+#ifdef TF_DLL
+		// tf: additionally replenish spy cloak, engineer metal, etc. -copperpixel
+		CTFPlayer* pTFPlayer = ToTFPlayer(this);
+		if (pTFPlayer)
+		{
+			pTFPlayer->GiveAmmo(200, TF_AMMO_METAL, true);			// metal
+			pTFPlayer->m_Shared.AddToSpyCloakMeter(100.0f, true);		// spy cloak
+			pTFPlayer->AddToSpyKnife(100.0f, true);					// spy-cicle recharge 
+			pTFPlayer->m_Shared.SetDemomanChargeMeter(100.0f);		// shields charge
+			pTFPlayer->m_Shared.SetScoutEnergyDrinkMeter(100.0f);		// bonk/crit-a-cola
+			pTFPlayer->m_Shared.SetScoutHypeMeter(100.0f);			// soda popper hype
+		}
+#endif
+	}
 #else
 	// NOTE: If we ever support full impulse commands on the client,
 	// remove this line and call ImpulseCommands instead.

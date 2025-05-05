@@ -150,6 +150,27 @@ void CObjectDispenser::DetonateObject( void )
 		return;
 
 
+	// If we're built, explode for damage
+	if (IsMiniBuilding() && !IsCarried() && !IsBuilding() && !IsPlacing())
+	{
+		Vector vecOrigin = GetAbsOrigin();
+		CTraceFilterIgnorePlayers traceFilter(NULL, COLLISION_GROUP_PROJECTILE);
+
+		// base 50 damage, scale by metal amount
+		float flDamage = RemapValClamped(m_iAmmoMetal, 0, MINI_DISPENSER_MAX_METAL, 50.0f, 300.0f);
+		CTakeDamageInfo info(this, GetOwner(), flDamage, DMG_BLAST);
+
+		// Scale blast radius
+		float flRadius = RemapValClamped(m_iAmmoMetal, 0, MINI_DISPENSER_MAX_METAL, 150.0f, 200.0f);
+		CTFRadiusDamageInfo radiusinfo(&info, vecOrigin, flRadius, NULL, flRadius);
+		TFGameRules()->RadiusDamage(radiusinfo);
+
+		CPVSFilter filter(vecOrigin);
+		TE_TFExplosion(filter, 0.0f, vecOrigin, Vector(0, 0, 0), TF_WEAPON_GRENADE_PIPEBOMB, kInvalidEHandleExplosion, -1, SPECIAL1, INVALID_STRING_INDEX);
+	}
+
+
+
 	TFGameRules()->OnDispenserDestroyed( this );
 
 	BaseClass::DetonateObject();
@@ -209,6 +230,11 @@ void CObjectDispenser::FirstSpawn()
 //-----------------------------------------------------------------------------
 const char* CObjectDispenser::GetBuildingModel( int iLevel )
 {
+	if (ShouldBeMiniBuilding(GetOwner()))
+	{
+		return MINI_DISPENSER_MODEL_BUILDING;
+	}
+	else
 	{
 		switch ( iLevel )
 		{
@@ -236,6 +262,11 @@ const char* CObjectDispenser::GetBuildingModel( int iLevel )
 //-----------------------------------------------------------------------------
 const char* CObjectDispenser::GetFinishedModel( int iLevel )
 {
+	if (IsMiniBuilding())
+	{
+		return MINI_DISPENSER_MODEL;
+	}
+	else
 	{
 		switch ( iLevel )
 		{
@@ -357,6 +388,11 @@ void CObjectDispenser::SetModel( const char *pModel )
 	BaseClass::SetModel( pModel );
 
 		// Reset this after model change
+
+		UTIL_SetSize(this,
+		IsMiniBuilding() ? MINI_DISPENSER_MINS : DISPENSER_MINS,
+		IsMiniBuilding() ? MINI_DISPENSER_MAXS : DISPENSER_MAXS);
+
 		UTIL_SetSize( this,
 			DISPENSER_MINS,
 			DISPENSER_MAXS );
@@ -376,7 +412,11 @@ void CObjectDispenser::InitializeMapPlacedObject( void )
 
 bool CObjectDispenser::ShouldBeMiniBuilding( CTFPlayer* pPlayer )
 {
-	return false;
+	int nMiniDispenserEnabled = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(GetOwner(), nMiniDispenserEnabled, allows_building_mini_dispenser);
+	return nMiniDispenserEnabled != 0;
+	
+	//return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -384,6 +424,9 @@ bool CObjectDispenser::ShouldBeMiniBuilding( CTFPlayer* pPlayer )
 //-----------------------------------------------------------------------------
 int CObjectDispenser::GetMaxUpgradeLevel()
 {
+
+	if (IsMiniBuilding())
+		return DISPENSER_MINI_MAX_LEVEL;
 
 	return BaseClass::GetMaxUpgradeLevel();
 }
@@ -500,6 +543,10 @@ void CObjectDispenser::Precache()
 	iModelIndex = PrecacheModel( DISPENSER_MODEL_LVL3 );
 	PrecacheGibsForModel( iModelIndex );
 
+	PrecacheGibsForModel(PrecacheModel(MINI_DISPENSER_MODEL_PLACEMENT));
+	PrecacheGibsForModel(PrecacheModel(MINI_DISPENSER_MODEL_BUILDING));
+	PrecacheGibsForModel(PrecacheModel(MINI_DISPENSER_MODEL));
+
 
 	PrecacheVGuiScreen( "screen_obj_dispenser_blue" );
 	PrecacheVGuiScreen( "screen_obj_dispenser_red" );
@@ -526,7 +573,8 @@ bool CObjectDispenser::DispenseAmmo( CTFPlayer *pPlayer )
 	int nNoPrimaryAmmoFromDispensersWhileActive = 0;
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer->GetActiveWeapon(), nNoPrimaryAmmoFromDispensersWhileActive, no_primary_ammo_from_dispensers );
 
-	float flAmmoRate = g_flDispenserAmmoRates[GetUpgradeLevel()];
+	float flAmmoRate = IsMiniBuilding() ? DISPENSER_MINI_AMMO_RATE : g_flDispenserAmmoRates[GetUpgradeLevel()];
+	//float flAmmoRate = g_flDispenserAmmoRates[GetUpgradeLevel()];
 
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flAmmoRate, mult_dispenser_rate );
 
@@ -713,7 +761,8 @@ void CObjectDispenser::DispenseThink( void )
 	{
 		// Try to dispense more often when no players are around so we 
 		// give it as soon as possible when a new player shows up
-		float flNextAmmoDelay = 1.0;
+		//float flNextAmmoDelay = 1.0;
+		float flNextAmmoDelay = IsMiniBuilding() ? DISPENSER_MINI_AMMO_THINK : 1.0;
 		m_flNextAmmoDispense = gpGlobals->curtime + ( bPlayerReceivedAmmo ? flNextAmmoDelay : 0.1 );
 	}
 
@@ -834,7 +883,8 @@ void CObjectDispenser::ResetHealingTargets( void )
 //-----------------------------------------------------------------------------
 float CObjectDispenser::GetHealRate() const
 {
-	float flHealRate = g_flDispenserHealRates[GetUpgradeLevel()];
+	//float flHealRate = g_flDispenserHealRates[GetUpgradeLevel()];
+	float flHealRate = IsMiniBuilding() ? DISPENSER_MINI_HEAL_RATE : g_flDispenserHealRates[GetUpgradeLevel()];
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flHealRate, mult_dispenser_rate );
 
 	return flHealRate;

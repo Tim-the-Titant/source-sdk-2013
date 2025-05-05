@@ -275,6 +275,21 @@ void CObjectSentrygun::SentryThink( void )
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), m_flSentryRange, mult_sentry_range );
 	}
 
+	m_flFireRate = 1.f;
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER(GetOwner(), m_flFireRate, mult_sentry_firerate);
+	if (m_bPlayerControlled)
+	{
+		m_flFireRate *= 0.5f;
+	}
+	if (IsMiniBuilding() && !IsDisposableBuilding())
+	{
+		m_flFireRate *= 0.75f;
+	}
+	if (GetBuilder() && GetBuilder()->m_Shared.InCond(TF_COND_CRITBOOSTED_USER_BUFF))
+	{
+		m_flFireRate *= 0.4f;
+	}
+
 	switch( m_iState )
 	{
 	case SENTRY_STATE_INACTIVE:
@@ -1267,24 +1282,6 @@ void CObjectSentrygun::Attack()
 			Fire();
 		}
 
-		m_flFireRate = 1.f;
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), m_flFireRate, mult_sentry_firerate );
-
-		if ( m_bPlayerControlled )
-		{
-			m_flFireRate *= 0.5f;
-		}
-			
-		if ( IsMiniBuilding() && !IsDisposableBuilding() )
-		{
-			m_flFireRate *= 0.75f;
-		}
-
-		if ( GetBuilder() && GetBuilder()->m_Shared.InCond( TF_COND_CRITBOOSTED_USER_BUFF ) )
-		{
-			m_flFireRate *= 0.4f;
-		}
-
 		if ( m_iUpgradeLevel == 1 )
 		{
 			// Level 1 sentries fire slower
@@ -1367,6 +1364,7 @@ bool CObjectSentrygun::FireRocket()
 		// Setup next rocket shot
 		if ( m_bPlayerControlled )
 		{
+			AddGesture(ACT_RANGE_ATTACK2, 2.25, true);
 			m_flNextRocketAttack = gpGlobals->curtime + 2.25;
 		}
 		else
@@ -1735,10 +1733,10 @@ void CObjectSentrygun::SentryRotate( void )
 				EmitSentrySound( "Building_Sentrygun.Idle" );
 				break;
 			case 2:
-				EmitSound( "Building_Sentrygun.Idle2" );
+				EmitSentrySound( "Building_Sentrygun.Idle2" );
 				break;
 			case 3:
-				EmitSound( "Building_Sentrygun.Idle3" );
+				EmitSentrySound( "Building_Sentrygun.Idle3" );
 				break;
 			}
 
@@ -2394,4 +2392,61 @@ void CTFProjectile_SentryRocket::Spawn()
 
 	ResetSequence( LookupSequence("idle") );
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Directly create a sentry gun at the precise position and orientation desired
+//-----------------------------------------------------------------------------
+void CC_SentrygunSpawn(const CCommand& args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	CObjectSentrygun* sentry = (CObjectSentrygun*)CreateEntityByName("obj_sentrygun");
+	if (sentry)
+	{
+		CBasePlayer* pPlayer = UTIL_GetCommandClient();
+		trace_t tr;
+		Vector forward;
+		pPlayer->EyeVectors(&forward);
+		UTIL_TraceLine(pPlayer->EyePosition(),
+			pPlayer->EyePosition() + forward * MAX_TRACE_LENGTH, MASK_SOLID,
+			pPlayer, COLLISION_GROUP_NONE, &tr);
+
+		if (tr.fraction != 1.0)
+		{
+			sentry->SetAbsOrigin(tr.endpos);
+			QAngle angles = pPlayer->BodyAngles();
+			angles.x = 0.0f;
+			angles.z = 0.0f;
+			sentry->SetAbsAngles(angles);
+		}
+
+		int iSentryLevel = 2;
+		int iTeamNum = pPlayer->GetTeamNumber();
+
+		if (args.ArgC() > 1)
+		{
+			int i = atoi(args[1]);
+			if (abs(i) >= 1 && abs(i) <= 3)
+			{
+				iSentryLevel = abs(i) - 1;
+			}
+
+			if (i < 0)
+			{
+				iTeamNum = GetEnemyTeam(iTeamNum);
+			}
+		}
+
+		sentry->m_nDefaultUpgradeLevel = iSentryLevel;
+
+		sentry->Spawn();
+		sentry->ChangeTeam(iTeamNum);
+
+		sentry->InitializeMapPlacedObject();
+	}
+}
+static ConCommand sentrygun_spawn("sentrygun_spawn", CC_SentrygunSpawn, "Spawns a Sentrygun where the player is looking. Takes a parameter for level of sentry [1-3: default 3]. If the passed sentry level < 0, an enemy sentry is spawned.", FCVAR_GAMEDLL | FCVAR_CHEAT);
+
+
 

@@ -1468,7 +1468,7 @@ void CTFBot::ReEvaluateCurrentClass( void )
 {
 	// having the bot die will trigger them to
 	// re-evaluate their class in PhysicsSimulate() below
-	CommitSuicide( false, true );
+	//CommitSuicide( false, true );
 }
 
 //-----------------------------------------------------------------------------------------------------

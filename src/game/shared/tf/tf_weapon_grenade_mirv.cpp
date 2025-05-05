@@ -99,7 +99,8 @@ CTFGrenadeMirvProjectile* CTFGrenadeMirvProjectile::Create( const Vector &positi
 															const Vector &velocity, const AngularImpulse &angVelocity, 
 															CBaseCombatCharacter *pOwner, const CTFWeaponInfo &weaponInfo, float timer, int iFlags )
 {
-	CTFGrenadeMirvProjectile *pGrenade = static_cast<CTFGrenadeMirvProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_mirv_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	//CTFGrenadeMirvProjectile *pGrenade = static_cast<CTFGrenadeMirvProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_mirv_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	CTFGrenadeMirvProjectile *pGrenade = static_cast<CTFGrenadeMirvProjectile*>(CTFWeaponBaseGrenadeProj::Create("tf_weapon_grenade_mirv_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer));
 	return pGrenade;
 }
 
@@ -141,11 +142,11 @@ void CTFGrenadeMirvProjectile::BounceSound( void )
 //-----------------------------------------------------------------------------
 void CTFGrenadeMirvProjectile::Detonate()
 {
-	if ( ShouldNotDetonate() )
-	{
-		RemoveGrenade();
-		return;
-	}
+	//if ( ShouldNotDetonate() )
+	//{
+		//RemoveGrenade();
+		//return;
+	//}
 
 	BaseClass::Detonate();
 }

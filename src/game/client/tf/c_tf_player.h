@@ -124,6 +124,7 @@ public:
 	virtual void Simulate( void );
 	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options ) OVERRIDE;
 	virtual void UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity ) OVERRIDE;
+	virtual void PlayStepSound(Vector& vecOrigin, surfacedata_t* psurface, float fvol, bool force);
 
 	CNewParticleEffect *SpawnHalloweenSpellFootsteps( ParticleAttachment_t eParticleAttachment, int iHalloweenFootstepType );
 
@@ -198,7 +199,7 @@ public:
 	// Gibs.
 	void InitPlayerGibs( void );
 	void CheckAndUpdateGibType( void );
-	void CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVelocity, float flImpactScale, bool bBurning, bool bWearableGibs=false, bool bOnlyHead=false, bool bDisguiseGibs=false );
+	void CreatePlayerGibs(const Vector& vecOrigin, const Vector& vecVelocity, float flImpactScale, bool bBurning, bool bFeignDeath = false, bool bWearableGibs = false, bool bOnlyHead = false, bool bDisguiseGibs = false);
 	void DropPartyHat( breakablepropparams_t &breakParams, Vector &vecBreakVelocity );
 	void DropWearable( C_TFWearable *pItem, const breakablepropparams_t &params );
 
@@ -279,6 +280,9 @@ public:
 	void			ShowNemesisIcon( bool bShow );
 	void			ShowDuelingIcon( bool bShow );
 	void			ShowIconForIT( bool bShow );
+
+	void			UpdateTranqMark(bool bShow, bool bForceStop = false);
+	void			UpdateSpyClassStealParticle(bool bShow);
 
 	void			ShowBirthdayEffect( bool bShow );
 
@@ -770,6 +774,8 @@ public:
 
 	HPARTICLEFFECT m_pRuneChargeReadyEffect;
 
+	HPARTICLEFFECT m_pRocketPackEffect;
+
 	enum EKartParticles
 	{
 		KART_PARTICLE_LEFT_LIGHT = 0,
@@ -1073,7 +1079,7 @@ private:
 	void Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity );
 
 	void CreateTFRagdoll();
-	void CreateTFGibs( bool bDestroyRagdoll = true, bool bCurrentPosition = false );
+	void CreateTFGibs(bool bDestroyRagdoll = true);
 	void CreateWearableGibs( bool bDisguiseWearables );
 	void CreateTFHeadGib();
 
@@ -1117,6 +1123,7 @@ private:
 	float m_flPercentInvisible;
 	float m_flTimeToDissolve;
 	bool  m_bCritOnHardHit;	// plays the red mist particle effect
+	bool m_bBombinomicon;
 	float m_flHeadScale;
 	float m_flTorsoScale;
 	float m_flHandScale;

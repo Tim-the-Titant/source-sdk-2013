@@ -958,6 +958,12 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 {
 	VPROF("CServerGameDLL::LevelInit");
 
+	ConVar* cl_localnetworkbackdoor = cvar->FindVar("cl_localnetworkbackdoor");
+	if (gpGlobals->maxClients == 1)
+		cl_localnetworkbackdoor->SetValue("0");
+	else
+		cl_localnetworkbackdoor->SetValue("1"),
+
 	g_flServerCurTime = gpGlobals->curtime;
 
 #ifdef USES_ECON_ITEMS

@@ -74,6 +74,8 @@ private:
 	char m_szSapperModel[ _MAX_PATH ];
 	char m_szPlacementModel[ _MAX_PATH ];
 	char szSapperSound[ _MAX_PATH ];
+
+	bool m_bIsRinging;
 };
 
 #endif // TF_OBJ_SAPPER_H

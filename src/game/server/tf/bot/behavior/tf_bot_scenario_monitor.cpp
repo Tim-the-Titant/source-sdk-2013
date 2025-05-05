@@ -176,7 +176,7 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 	}
 #endif // TF_RAID_MODE	
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
+	if (TFGameRules()->IsMannVsMachineMode() && me->GetTeamNumber() == TF_TEAM_PVE_INVADERS)
 	{
 		if ( me->IsPlayerClass( TF_CLASS_SPY ) )
 		{
@@ -219,6 +219,20 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 
 		// capture the flag
 		return new CTFBotFetchFlag;
+	}
+
+	if (TFGameRules()->IsMannVsMachineMode() && me->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS)
+	{
+
+		if (me->IsPlayerClass(TF_CLASS_ENGINEER))
+		{
+			return new CTFBotMvMEngineerIdle;
+		}
+
+
+
+		// capture the flag
+		return new CTFBotSeekAndDestroy;
 	}
 
 	if ( me->IsPlayerClass( TF_CLASS_SPY ) )

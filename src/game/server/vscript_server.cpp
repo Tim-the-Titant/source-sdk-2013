@@ -1766,6 +1766,8 @@ static const char *Script_FileToString( const char *pszFileName )
 	if ( iFLen > FILE_TO_STRING_BUF_SIZE )
 	{
 		Warning("File %s (from %s) is len %d too long for a ScriptFileRead\n", szFilePath, pszFileName, iFLen );
+		g_pFullFileSystem->Close(hFile);
+
 		return NULL;
 	}
 	g_pFullFileSystem->Seek( hFile, 0, FILESYSTEM_SEEK_HEAD );
@@ -2778,6 +2780,7 @@ DECLARE_SCRIPT_CONST( ETFCond, TF_COND_AIR_CURRENT )
 DECLARE_SCRIPT_CONST( ETFCond, TF_COND_HALLOWEEN_HELL_HEAL )
 DECLARE_SCRIPT_CONST( ETFCond, TF_COND_POWERUPMODE_DOMINANT )
 DECLARE_SCRIPT_CONST( ETFCond, TF_COND_IMMUNE_TO_PUSHBACK )
+DECLARE_SCRIPT_CONST(ETFCond, TF_COND_MINICRITBOOSTED)
 REGISTER_SCRIPT_CONST_TABLE( ETFCond )
 
 DECLARE_SCRIPT_CONST_TABLE( ECritType )

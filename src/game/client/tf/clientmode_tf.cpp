@@ -63,6 +63,8 @@
 #include "engine/IEngineSound.h"
 #include "tf_partyclient.h"
 
+#include "tf_hud_menu_spy_build.h"
+
 #include "quest_objective_manager.h"
 #include "econ_item_system.h"
 #include "tf_mann_vs_machine_stats.h"
@@ -363,6 +365,7 @@ ClientModeTFNormal::ClientModeTFNormal()
 	m_pMenuSpyDisguise = NULL;
 	m_pEurekaTeleportMenu = NULL;
 	m_pMenuTauntSelection = NULL;
+	m_pMenuSpyBuild = NULL;
 	m_pGameUI = NULL;
 	m_pFreezePanel = NULL;
 	m_pQuickSwitch = NULL;
@@ -420,6 +423,8 @@ void ClientModeTFNormal::Init()
 
 	m_pMenuUpgradePanel = ( CHudUpgradePanel* )GET_HUDELEMENT( CHudUpgradePanel );
 
+	m_pMenuSpyBuild = (CHudMenuSpyBuild*)GET_HUDELEMENT(CHudMenuSpyBuild);
+	Assert(m_pMenuSpyBuild);
 
 	m_pMenuSpell = ( CHudSpellMenu * )GET_HUDELEMENT( CHudSpellMenu);
 	Assert( m_pMenuSpell );
@@ -833,6 +838,7 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 			case POWERUP_BOTTLE_REFILL_AMMO: pText = "#TF_PVE_Player_UsedRefillAmmoBottle"; break;
 			case POWERUP_BOTTLE_BUILDINGS_INSTANT_UPGRADE: pText = "#TF_PVE_Player_UsedBuildingUpgrade"; break;
 			case POWERUP_BOTTLE_RADIUS_STEALTH: pText = "#TF_PVE_Player_UsedRadiusStealth"; break;
+			case POWERUP_BOTTLE_SEE_CASH_THROUGH_WALL: pText = "#TF_PVE_Player_SeeCashThroughWall"; break;
 			}
 			if ( pText != NULL )
 			{
@@ -1544,6 +1550,13 @@ int	ClientModeTFNormal::HudElementKeyInput( int down, ButtonCode_t keynum, const
 		}
 	}
 
+	if ( m_pMenuSpyBuild )
+	{
+		if ( !m_pMenuSpyBuild->HudElementKeyInput( down, keynum, pszCurrentBinding ) )
+		{
+			return 0;
+		}
+	}
 
 	if ( m_pEurekaTeleportMenu )
 	{

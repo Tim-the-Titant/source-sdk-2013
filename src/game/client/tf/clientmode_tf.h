@@ -125,7 +125,7 @@ private:
 	CHudMenuSpyDisguise 	*m_pMenuSpyDisguise;
 	CHudMenuTauntSelection	*m_pMenuTauntSelection;
 	CHudUpgradePanel		*m_pMenuUpgradePanel;
-	CHudMenuSpyBuild* m_pMenuSpyBuild;
+	CHudMenuSpyBuild		*m_pMenuSpyBuild;
 	CHudSpellMenu			*m_pMenuSpell;
 	CHudEurekaEffectTeleportMenu *m_pEurekaTeleportMenu;
 	CHudTeamGoalTournament	*m_pTeamGoalTournament;

@@ -465,7 +465,8 @@ public:
 	void	OnSpyTouchedByEnemy( void );
 	float	GetLastStealthExposedTime( void ) { return m_flLastStealthExposeTime; }
 	void	SetNextStealthTime( float flTime ) { m_flStealthNextChangeTime = flTime; }
-	bool	IsFullyInvisible( void ) { return ( GetPercentInvisible() == 1.f ); }
+	//bool	IsFullyInvisible( void ) { return ( GetPercentInvisible() == 1.f ); }
+	bool	IsFullyInvisible(void) { return GetPercentInvisible() == 1.f || InCond(TF_COND_STEALTHED_PHASE); }
 
 	bool	IsEnteringOrExitingFullyInvisible( void );
 
@@ -473,6 +474,11 @@ public:
 	float	GetRuneCharge() const { return m_flRuneCharge; }
 	void	SetRuneCharge( float flVal ) { m_flRuneCharge = Clamp( flVal, 0.f, 100.f ); }
 	bool	IsRuneCharged() const { return m_flRuneCharge == 100.f; }
+
+	bool	HasPhaseCloakAbility(void);
+
+	float	GetSpaceJumpChargeMeter() const { return m_flSpaceJumpCharge; }
+	void	SetSpaceJumpChargeMeter(float val) { m_flSpaceJumpCharge = Min(val, 100.0f); }
 
 	bool	IsRocketPackReady( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ) >= 50.f; }
 	float	GetRocketPackCharge( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ); }
@@ -679,6 +685,8 @@ public:
 	void SetVehicleMoveAngles( const QAngle& angVehicleMoveAngles ) { m_angVehicleMovePitchLast = angVehicleMoveAngles[PITCH]; m_angVehicleMoveAngles = angVehicleMoveAngles; }
 #endif
 
+	void DoRocketPack();
+
 #ifdef GAME_DLL
 	void SetBestOverhealDecayMult( float fValue )	{ m_flBestOverhealDecayMult = fValue; }
 	float GetBestOverhealDecayMult() const			{ return m_flBestOverhealDecayMult; }
@@ -722,7 +730,9 @@ public:
 
 	void GetConditionsBits( CBitVec< TF_COND_LAST >& vbConditions ) const;
 
-	void ApplyRocketPackStun( float flStunDuration );
+	void	UpdateRocketPack(void);
+	void	ApplyRocketPackStun(float flStunDuration);
+	bool	CanBuildSpyTraps(void);
 
 
 	void OnAttack( void );
@@ -820,6 +830,13 @@ private:
 	void OnAddCondGas( void );
 	void OnAddRocketPack( void );
 
+	void OnAddTranqMark(void);
+	void OnAddSpaceGravity(void);
+	void OnAddSelfConc(void);
+	void OnAddStealthedPhase(void);
+	void OnAddClipOverload(void);
+	void OnAddCondSpyClassSteal(void);
+
 
 	void OnRemoveZoomed( void );
 	void OnRemoveBurning( void );
@@ -900,6 +917,12 @@ private:
 	void OnRemoveRocketPack( void );
 	void OnRemoveBurningPyro( void );
 	
+	void OnRemoveTranqMark(void);
+	void OnRemoveSpaceGravity(void);
+	void OnRemoveSelfConc(void);
+	void OnRemoveStealthedPhase(void);
+	void OnRemoveClipOverload(void);
+	void OnRemoveCondSpyClassSteal(void);
 
 	// Starting a new trend, putting Add and Remove next to each other
 	void OnAddCondParachute( void );
@@ -1124,6 +1147,8 @@ private:
 	CNetworkArray( float, m_flItemChargeMeter, LAST_LOADOUT_SLOT_WITH_CHARGE_METER + 1 );
 	float m_flPrevItemChargeMeter[ LAST_LOADOUT_SLOT_WITH_CHARGE_METER + 1 ];
 
+	// Space 
+	CNetworkVar(float, m_flSpaceJumpCharge);
 
 	CNetworkVar( int, m_iCritMult );
 

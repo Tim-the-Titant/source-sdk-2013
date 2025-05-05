@@ -1606,6 +1606,7 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 	case TF_COND_SNIPERCHARGE_RAGE_BUFF:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
+	case TF_COND_MINICRITBOOSTED:
 		OnAddCritBoost();
 		break;
 
@@ -1896,6 +1897,7 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 	case TF_COND_SNIPERCHARGE_RAGE_BUFF:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
+	case TF_COND_MINICRITBOOSTED:
 		OnRemoveCritBoost();
 		break;
 
@@ -3092,6 +3094,8 @@ void CTFPlayerShared::ConditionThink( void )
 		UpdateEnergyDrinkMeter();
 		UpdateChargeMeter();
 		DemoShieldChargeThink();
+
+		UpdateRocketPack();
 	}
 
 	VehicleThink();
@@ -3991,15 +3995,6 @@ void CTFPlayerShared::OnAddTaunting( void )
 	// Unzoom if we are a sniper zoomed!
 	InstantlySniperUnzoom();
 
-	if ( ( m_pOuter->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) || m_pOuter->IsPlayerClass( TF_CLASS_SCOUT ) ) && GetTauntIndex() == TAUNT_BASE_WEAPON )
-	{
-		CTFLunchBox *pLunchBox = dynamic_cast <CTFLunchBox *> ( pWpn );
-		if ( pLunchBox )
-		{
-			pLunchBox->DrainAmmo();
-		}
-	}
-
 #ifdef GAME_DLL
 	m_pOuter->PlayWearableAnimsForPlaybackEvent( WAP_START_TAUNTING );
 #else
@@ -4037,23 +4032,53 @@ void CTFPlayerShared::OnRemoveTaunting( void )
 	}
 
 #ifdef GAME_DLL
-	// Switch to our melee weapon, if we are at the end of a type 2 lunchbox taunt.
-	if ( m_bBiteEffectWasApplied && InCond( TF_COND_CANNOT_SWITCH_FROM_MELEE ) )
+	// Switch weapons after lunchbox effects were applied
+	if (m_bBiteEffectWasApplied)
 	{
-		CBaseCombatWeapon *pWpn = m_pOuter->Weapon_GetSlot( TF_WPN_TYPE_MELEE );
-		if ( pWpn )
+		bool bSwitchWeapon = false;
+		// Switch to our melee weapon, if we are at the end of a type 2 lunchbox taunt or finished eating.
+		if (InCond(TF_COND_CANNOT_SWITCH_FROM_MELEE))
 		{
-			m_pOuter->Weapon_Switch( pWpn );
+			CBaseCombatWeapon* pWpn = m_pOuter->Weapon_GetSlot(TF_WPN_TYPE_MELEE);
+			if (pWpn)
+			{
+				m_pOuter->Weapon_Switch(pWpn);
+			}
+			else
+			{
+				// Safety net
+				RemoveCond(TF_COND_ENERGY_BUFF);
+				RemoveCond(TF_COND_CANNOT_SWITCH_FROM_MELEE);
+				bSwitchWeapon = true;
+			}
 		}
 		else
 		{
-			// Safety net
-			RemoveCond( TF_COND_ENERGY_BUFF );
-			RemoveCond( TF_COND_CANNOT_SWITCH_FROM_MELEE );
-		}
-	}
+			CBaseCombatWeapon* pActiveWpn = m_pOuter->GetActiveTFWeapon();
 
-	m_bBiteEffectWasApplied = false;
+			// Drink effects should always switch away
+			// Heavy might still be hungry, don't switch away if he has more lunchbox ammo
+			if (InCond(TF_COND_ENERGY_BUFF) || InCond(TF_COND_PHASE) || (pActiveWpn && !pActiveWpn->HasAnyAmmo()))
+			{
+				bSwitchWeapon = true;
+			}
+		}
+		// Switch to last weapon, otherwise the next best weapon
+		if (bSwitchWeapon)
+		{
+			CBaseCombatWeapon* pLastWeapon = m_pOuter->GetLastWeapon();
+			if (pLastWeapon && m_pOuter->Weapon_CanSwitchTo(pLastWeapon))
+			{
+				m_pOuter->Weapon_Switch(pLastWeapon);
+			}
+			else
+			{
+				m_pOuter->SwitchToNextBestWeapon(pLastWeapon);
+			}
+		}
+
+		m_bBiteEffectWasApplied = false;
+	}
 
 	if ( m_pOuter->m_hTauntItem != NULL )
 	{
@@ -4548,15 +4573,29 @@ void CTFPlayerShared::OnRemoveDisguisedAsDispenser( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddRocketPack( void )
+void CTFPlayerShared::OnAddRocketPack(void)
 {
+#ifdef CLIENT_DLL
+	if (!m_pOuter->m_pRocketPackEffect)
+	{
+		const char* szParticle = "rocketbackblast";
+		m_pOuter->m_pRocketPackEffect = m_pOuter->ParticleProp()->Create(szParticle, PATTACH_POINT_FOLLOW, "flag");
+	}
+#endif	// CLIENT_DLL
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRocketPack( void )
+void CTFPlayerShared::OnRemoveRocketPack(void)
 {
+#ifdef CLIENT_DLL
+	if (m_pOuter->m_pRocketPackEffect)
+	{
+		m_pOuter->ParticleProp()->StopEmission(m_pOuter->m_pRocketPackEffect);
+		m_pOuter->m_pRocketPackEffect = NULL;
+	}
+#endif	// CLIENT_DLL
 }
 
 //-----------------------------------------------------------------------------
@@ -4570,6 +4609,26 @@ void CTFPlayerShared::OnRemoveBurningPyro( void )
 		RemoveCond( TF_COND_BURNING );
 	}
 #endif // GAME_DLL
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::UpdateRocketPack(void)
+{
+	if (!m_pOuter->IsPlayerClass(TF_CLASS_PYRO))
+		return;
+
+	if (InCond(TF_COND_ROCKETPACK))
+	{
+#ifdef GAME_DLL
+		// Check for landing
+		if (m_pOuter->GetFlags() & FL_ONGROUND)
+		{
+			RemoveCond(TF_COND_ROCKETPACK);
+		}
+#endif
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4653,6 +4712,26 @@ void CTFPlayerShared::SetDefaultItemChargeMeters( void )
 	}
 }
 #endif // GAME_DLL
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFPlayerShared::CanBuildSpyTraps(void)
+{
+	if (!m_pOuter->IsPlayerClass(TF_CLASS_SPY))
+		return false;
+
+	if (m_pOuter->IsBot())
+		return false;
+
+	if (TFGameRules()->IsMannVsMachineMode())
+		return true;
+
+	int iTraps = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(m_pOuter, iTraps, ability_spy_traps);
+
+	return (iTraps > 0);
+}
 
 #ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------
@@ -7463,7 +7542,8 @@ void CTFPlayerShared::UpdateCritBoostEffect( ECritBoostUpdateType eUpdateType )
 	bool bShouldDisplayCritBoostEffect = IsCritBoosted()
 									  || InCond( TF_COND_ENERGY_BUFF )
 									  //|| IsHypeBuffed()
-									  || InCond( TF_COND_SNIPERCHARGE_RAGE_BUFF );
+									  || InCond(TF_COND_SNIPERCHARGE_RAGE_BUFF)
+									  || InCond(TF_COND_MINICRITBOOSTED);
 
 	if ( m_pOuter->GetActiveTFWeapon() )
 	{
@@ -12720,6 +12800,18 @@ bool CTFPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 	}
 
 	return bCanSwitch;
+}
+
+
+void CTFPlayer::PlayStepSound(Vector& vecOrigin, surfacedata_t* psurface, float fvol, bool force)
+{
+#ifdef CLIENT_DLL
+	// Don't make predicted footstep sounds in third person, animevents will take care of that.
+	if (prediction->InPrediction() && C_BasePlayer::ShouldDrawLocalPlayer())
+		return;
+#endif
+
+	BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);
 }
 
 

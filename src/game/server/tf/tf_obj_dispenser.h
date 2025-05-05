@@ -80,6 +80,11 @@ public:
 #define DISPENSER_MODEL_BUILDING_LVL3	"models/buildables/dispenser_lvl3.mdl"
 #define DISPENSER_MODEL_LVL3			"models/buildables/dispenser_lvl3_light.mdl"
 
+// Mini models
+#define MINI_DISPENSER_MODEL_PLACEMENT		"models/workshop/buildables/mini_dispenser/mini_dispenser.mdl"
+#define MINI_DISPENSER_MODEL_BUILDING		"models/workshop/buildables/mini_dispenser/mini_dispenser.mdl"
+#define MINI_DISPENSER_MODEL				"models/workshop/buildables/mini_dispenser/mini_dispenser.mdl"
+
 
 // ------------------------------------------------------------------------ //
 // Resupply object that's built by the player

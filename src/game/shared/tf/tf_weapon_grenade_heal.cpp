@@ -83,7 +83,8 @@ CTFGrenadeHealProjectile* CTFGrenadeHealProjectile::Create( const Vector &positi
 														 const Vector &velocity, const AngularImpulse &angVelocity, 
 														 CBaseCombatCharacter *pOwner, const CTFWeaponInfo &weaponInfo, float timer, int iFlags )
 {
-	CTFGrenadeHealProjectile *pGrenade = static_cast<CTFGrenadeHealProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_heal_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	//CTFGrenadeHealProjectile *pGrenade = static_cast<CTFGrenadeHealProjectile*>( CTFWeaponBaseGrenadeProj::Create( "tf_weapon_grenade_heal_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer, iFlags ) );
+	CTFGrenadeHealProjectile *pGrenade = static_cast<CTFGrenadeHealProjectile*>(CTFWeaponBaseGrenadeProj::Create("tf_weapon_grenade_heal_projectile", position, angles, velocity, angVelocity, pOwner, weaponInfo, timer));
 	if ( pGrenade )
 	{
 		pGrenade->ApplyLocalAngularVelocityImpulse( angVelocity );	
@@ -150,18 +151,18 @@ extern ConVar tf_grenade_show_radius;
 //-----------------------------------------------------------------------------
 void CTFGrenadeHealProjectile::Detonate()
 {
-	if ( ShouldNotDetonate() )
-	{
-		RemoveGrenade();
-		return;
-	}
+	//if ( ShouldNotDetonate() )
+	//{
+		//RemoveGrenade();
+	//	return;
+	//}
 
 	float flRadius = 180;
 	float flHealAmount = tf_grenade_heal_amount.GetFloat();
 
 	if ( tf_grenade_show_radius.GetBool() )
 	{
-		DrawRadius( flRadius );
+		//DrawRadius( flRadius );
 	}
 
 	// Heal every friendly player in the radius for 100 health

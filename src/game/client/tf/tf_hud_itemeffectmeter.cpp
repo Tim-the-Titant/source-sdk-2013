@@ -36,6 +36,8 @@
 #include "tf_weapon_bonesaw.h"
 #include "tf_weapon_slap.h"
 
+#include "tf_weapon_pda.h"
+
 #include <vgui_controls/ImagePanel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -318,8 +320,18 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 			hNewMeter->SetVisible( false );
 		}
 
+		hNewMeter = new CHudItemEffectMeter_Tranq( pszElementName, pPlayer );
+		if ( hNewMeter )
+		{
+			gHUD.AddHudElement( hNewMeter );
+			outMeters.AddToHead( hNewMeter );
+			hNewMeter->SetVisible( false );
+		}
+
 		DECLARE_ITEM_EFFECT_METER( C_TFWeaponBuilder, TF_WEAPON_BUILDER, true, "resource/UI/HudItemEffectMeter_Sapper.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFRevolver, TF_WEAPON_REVOLVER, false, "resource/UI/HUDItemEffectMeter_Spy.res" );
+
+		DECLARE_ITEM_EFFECT_METER(CTFWeaponPDA_Spy_Build, TF_WEAPON_PDA_SPY_BUILD, false, "resource/UI/HudItemEffectMeter_Spy_Build.res");
 
 		break;
 
@@ -339,6 +351,7 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		break;
 	}
 	case TF_CLASS_MEDIC:
+		DECLARE_ITEM_EFFECT_METER(CTFCrossbow, TF_WEAPON_CROSSBOW, true, "resource/UI/HudItemEffectMeter_SodaPopper.res");
 		DECLARE_ITEM_EFFECT_METER( CWeaponMedigun, TF_WEAPON_MEDIGUN, true, "resource/UI/HudItemEffectMeter_Scout.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFBonesaw, TF_WEAPON_BONESAW, false, "resource/UI/HUDItemEffectMeter_Organs.res" );
 		break;
@@ -376,6 +389,14 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		hNewMeter->SetVisible( false );
 	}
 
+	// Space jump
+	hNewMeter = new CHudItemEffectMeter_SpaceJump(pszElementName, pPlayer);
+	if (hNewMeter)
+	{
+		gHUD.AddHudElement(hNewMeter);
+		outMeters.AddToHead(hNewMeter);
+		hNewMeter->SetVisible(false);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1440,7 +1461,32 @@ bool CHudItemEffectMeter_Weapon<CWeaponMedigun>::ShouldFlash( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+template <>
+bool CHudItemEffectMeter_Weapon< CTFWeaponPDA_Spy_Build >::IsEnabled(void)
+{
+	if (!m_pPlayer)
+		return false;
 
+	if (!m_pPlayer->m_Shared.CanBuildSpyTraps())
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Specialization for Spy traps in MvM
+//-----------------------------------------------------------------------------
+template <>
+int CHudItemEffectMeter_Weapon< CTFWeaponPDA_Spy_Build >::GetCount(void)
+{
+	if (!m_pPlayer)
+		return false;
+
+	return m_pPlayer->GetAmmoCount(TF_AMMO_GRENADES1);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1512,6 +1558,72 @@ bool CHudItemEffectMeter_Rune::ShouldFlash( void )
 bool CHudItemEffectMeter_Rune::ShouldDraw( void )
 {
 	return m_pPlayer && m_pPlayer->m_Shared.CanRuneCharge();
+}
+
+//---------------------------------------------------------------------------------------------------------------------------
+// SPACE JUMPS
+//---------------------------------------------------------------------------------------------------------------------------
+CHudItemEffectMeter_SpaceJump::CHudItemEffectMeter_SpaceJump(const char* pszElementName, C_TFPlayer* pPlayer) : CHudItemEffectMeter(pszElementName, pPlayer)
+{
+
+}
+
+//-------------------------------------------------------------------------------
+bool CHudItemEffectMeter_SpaceJump::IsEnabled(void)
+{
+		if ( m_pPlayer && m_pPlayer->m_Shared.InCond( TF_COND_SPACE_GRAVITY ) )
+			return true;
+	return false;
+}
+//-------------------------------------------------------------------------------
+float CHudItemEffectMeter_SpaceJump::GetProgress(void)
+{
+	if (m_pPlayer)
+		return m_pPlayer->m_Shared.GetSpaceJumpChargeMeter() / 100.0f;
+	return 0;
+}
+//-------------------------------------------------------------------------------
+bool CHudItemEffectMeter_SpaceJump::ShouldDraw(void)
+{
+		if ( m_pPlayer && m_pPlayer->m_Shared.InCond( TF_COND_SPACE_GRAVITY ) )
+			return true;
+	return false;
+}
+//-----------------------------------------------------------------------------
+// Purpose: TRANQ
+//------------------------------------------------------------------------------
+CHudItemEffectMeter_Tranq::CHudItemEffectMeter_Tranq(const char* pszElementName, C_TFPlayer* pPlayer) : CHudItemEffectMeter(pszElementName, pPlayer)
+{
+
+}
+//------------------------------------------------------------------------------
+float CHudItemEffectMeter_Tranq::GetProgress(void)
+{
+	int iTranq = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(m_pPlayer, iTranq, override_projectile_type);
+	if (iTranq == TF_PROJECTILE_TRANQ)
+	{
+		float flDuration = Min(60.0f, (float)m_pPlayer->m_Shared.m_flSpyTranqBuffDuration);
+		return flDuration / 60.0f;
+	}
+
+	return 0.0f;
+}
+//-----------------------------------------------------------------------------
+bool CHudItemEffectMeter_Tranq::IsEnabled(void)
+{
+	int iTranq = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(m_pPlayer, iTranq, override_projectile_type);
+	return (iTranq == TF_PROJECTILE_TRANQ);
+}
+
+//-----------------------------------------------------------------------------
+template <>
+bool CHudItemEffectMeter_Weapon<CTFCrossbow>::IsEnabled(void)
+{
+	int iMilkBolt = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(m_pPlayer, iMilkBolt, fires_milk_bolt);
+	return (iMilkBolt > 0);
 }
 
 //-----------------------------------------------------------------------------

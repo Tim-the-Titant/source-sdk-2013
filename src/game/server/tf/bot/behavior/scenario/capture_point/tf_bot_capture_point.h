@@ -30,6 +30,8 @@ public:
 
 private:
 	PathFollower m_path;
+	CTFNavArea* m_goalArea;
+	CTFNavArea* ChooseGoalArea(CTFBot* me);
 	CountdownTimer m_repathTimer;
 };
 
